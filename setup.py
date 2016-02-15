@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup
 
 setup(
 	name='supervisord-syslog-notifier',
@@ -8,5 +8,10 @@ setup(
 	license='Apache 2.0',
 	author='alexander',
 	author_email='alexander@dohop.com',
-	description='Stream supervisord events to a logstash/syslog instance'
+	description='Stream supervisord events to a logstash/syslog instance',
+	entry_points={
+		'console_scripts': [
+			'syslog_notifier = syslog_notifier:main'
+		]
+	},
 )
