@@ -1,0 +1,5 @@
+supervisord_syslog_notifier.egg-info
+dist
+build
+.idea
+venv
