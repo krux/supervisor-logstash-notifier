@@ -61,11 +61,12 @@ def main():
 	"""
 	Main application loop.
 	"""
-	try:
-		host = os.getenv('SYSLOG_SERVER')
-		port = int(os.getenv('SYSLOG_PORT'))
-		socket_type = socket.SOCK_DGRAM if os.getenv('SYSLOG_PROTO') == 'udp' else socket.SOCK_STREAM
-	except KeyError:
+	host = os.getenv('SYSLOG_SERVER', None)
+	port = int(os.getenv('SYSLOG_PORT', None))
+	socket_type = socket.SOCK_DGRAM if os.getenv('SYSLOG_PROTO', None) == 'udp' else socket.SOCK_STREAM
+
+	if None in ('SYSLOG_SERVER', 'SYSLOG_PORT', 'SYSLOG_PROTO'):
+		# one of them hasn't got a value, exit
 		sys.exit("SYSLOG_SERVER, SYSLOG_PORT and SYSLOG_PROTO are required.")
 
 	events = ['BACKOFF', 'FATAL', 'EXITED', 'STOPPED', 'STARTING', 'RUNNING']
