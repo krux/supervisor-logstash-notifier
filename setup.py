@@ -2,7 +2,7 @@
 Setup script.
 """
 
-from setuptools import setup, find_packages
+from setuptools import setup
 
 with open('requirements.txt') as requirements:
     setup(
@@ -10,19 +10,10 @@ with open('requirements.txt') as requirements:
         version='0.0.1',
         description='Stream supervisord events to a logstash/syslog instance',
         author='Dohop hf.',
-        author_email='devs@infoxchange.net.au',
+        author_email='info@dohop.com',
         url='https://github.com/dohop/supervisord-syslog-notifier',
         license='Apache 2.0',
         long_description=open('README.md').read(),
-
-        packages=find_packages(exclude=['tests']),
-        package_data={
-            'forklift': [
-                'README.md',
-                'requirements.txt',
-                'test_requirements.txt',
-            ],
-        },
         entry_points={
             'console_scripts': [
                 'supervisord_syslog_notifier = supervisord_syslog_notifier:main',
