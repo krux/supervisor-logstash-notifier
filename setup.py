@@ -16,7 +16,8 @@
 
 from setuptools import setup
 
-with open('requirements.txt') as requirements:
+with open('requirements.txt') as requirements, \
+        open('test_requirements.txt') as test_requirements:
     setup(
         name='supervisord-syslog-notifier',
         version='0.0.1',
@@ -33,4 +34,6 @@ with open('requirements.txt') as requirements:
                     ]
         },
         install_requires=requirements.read().splitlines(),
+        test_suite='tests',
+        tests_require=test_requirements.read().splitlines(),
     )
