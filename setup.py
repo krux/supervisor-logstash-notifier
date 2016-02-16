@@ -23,7 +23,7 @@ with open('requirements.txt') as requirements:
 		packages=['syslog_notifier'],
 		url='https://github.com/dohop/supervisord-syslog-notifier',
 		license='Apache 2.0',
-		author='alexander',
+		author='aodj',
 		author_email='alexander@dohop.com',
 		description='Stream supervisord events to a logstash/syslog instance',
 		long_description=open('README.md').read(),
