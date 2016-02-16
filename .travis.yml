@@ -1,0 +1,26 @@
+language: python
+python:
+    - "2.7"
+    - "3.2"
+    - "3.3"
+    - "3.4"
+env:
+    - SUPERVISOR_PYTHON_VERSION=2.7
+install:
+    - pip install -r requirements.txt
+    - pip install -r test_requirements.txt
+    - ./install_supervisor
+script:
+    - .githooks/pre-commit -f
+    - python -m unittest discover
+sudo: false
+deploy:
+    provider: pypi
+    user: ixa
+    password:
+        secure: "i/CUjDVtSLg74kuLlKCAMAxOrj6WkxZpsXZG4Cz+30S5LXVqhgRfm3Ac0OY4LwMepksTNAqUUcV81p2Vf05y+1fp9q2d6g1C5gG+80pAaO7rDlRA6ce1tRjQmT4YrPDp9V5ngY5R1Y9ZmKuRKP6XYMJb5tzVfPE+JxyXneC9Ez8="
+    server: https://pypi.python.org/pypi
+    on:
+        all_branches: true
+        python: 2.7
+        condition: "\"$TRAVIS_TAG\" = \"v$(python setup.py --version)\""
