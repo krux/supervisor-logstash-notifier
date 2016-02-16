@@ -1,5 +1,3 @@
-# supervisord-syslog-notifier
-
 This is a port of the [Supervisor-logging](https://github.com/infoxchange/supervisor-logging) project with some ideas mixed in from the [supervisord-slack-notifier](https://github.com/Schibsted-Tech-Polska/supervisord-slack-notifier) project. Rather than capture loglines, as *Supervisor-logging* does it's intended to capture the [`PROCESS_STATE`](http://supervisord.org/events.html#event-listeners-and-event-notifications) events that Supervisor emits.
 
 supervisord-syslog-notifier
