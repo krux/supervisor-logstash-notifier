@@ -13,6 +13,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+Setup script for building
+"""
 
 from setuptools import setup
 
@@ -29,9 +32,9 @@ with open('requirements.txt') as requirements, \
         description='Stream supervisord events to a logstash/syslog instance',
         long_description=open('README.md').read(),
         entry_points={
-                    'console_scripts': [
-                        'syslog_notifier = syslog_notifier:main'
-                    ]
+            'console_scripts': [
+                'syslog_notifier = syslog_notifier:main'
+            ]
         },
         install_requires=requirements.read().splitlines(),
         test_suite='tests',

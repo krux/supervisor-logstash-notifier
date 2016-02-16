@@ -14,13 +14,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
+"""
+A module for dispatching Supervisor PROCESS_STATE events to a Syslog instance
+"""
+
 import os
 import re
 import sys
 import socket
 import time
 from supervisor import childutils
+
+import logging
 from logging.handlers import SysLogHandler
 
 
@@ -60,6 +65,9 @@ class PalletFormatter(logging.Formatter):
 
 
 def supervisor_events(stdin, stdout, *events):
+    """
+    Runs forever to receive supervisor events
+    """
     while True:
         childutils.listener.ready()
 
