@@ -32,8 +32,8 @@ class PalletFormatter(logging.Formatter):
 
     HOSTNAME = re.sub(
         r':\d+$', '', os.getenv('SITE_DOMAIN', socket.gethostname()))
-    FORMAT = '%(asctime)s {hostname} %(name)s[%(process)d]: %(message)s'.format(
-        hostname=HOSTNAME)
+    FORMAT = '%(asctime)s {hostname} %(name)s[%(process)d]: %(message)s'.\
+        format(hostname=HOSTNAME)
     DATE_FORMAT = '%Y-%m-%dT%H:%M:%S'
 
     converter = time.gmtime
