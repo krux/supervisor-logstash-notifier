@@ -22,14 +22,14 @@ from setuptools import setup
 with open('requirements.txt') as requirements, \
         open('test_requirements.txt') as test_requirements:
     setup(
-        name='supervisord-logstash-notifier',
+        name='supervisor-logstash-notifier',
         version='0.0.1',
         packages=['logstash_notifier'],
-        url='https://github.com/dohop/supervisord-logstash-notifier',
+        url='https://github.com/dohop/supervisor-logstash-notifier',
         license='Apache 2.0',
         author='aodj',
         author_email='alexander@dohop.com',
-        description='Stream supervisord events to a logstash instance',
+        description='Stream supervisor events to a logstash instance',
         long_description=open('README.md').read(),
         entry_points={
             'console_scripts': [

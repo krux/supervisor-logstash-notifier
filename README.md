@@ -13,7 +13,7 @@ Installation
 Python 2.7 or Python 3.2+ is required.
 
 ```
-pip install supervisord-logstash-notifier
+pip install supervisor-logstash-notifier
 ```
 
 Note that supervisor itself does not yet work on Python 3, though it can be
@@ -23,12 +23,12 @@ process).
 Usage
 -----
 
-The Syslog instance to send the events to is configured with the environment
+The Logstash instance to send the events to is configured with the environment
 variables:
 
-* `SYSLOG_SERVER`
-* `SYSLOG_PORT`
-* `SYSLOG_PROTO`
+* `LOGSTASH_SERVER`
+* `LOGSTASH_PORT`
+* `LOGSTASH_PROTO`
 
 Add the plugin as an event listener:
 
