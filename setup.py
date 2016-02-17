@@ -17,14 +17,14 @@
 Setup script for building
 """
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 with open('requirements.txt') as requirements, \
         open('test_requirements.txt') as test_requirements:
     setup(
         name='supervisor-logstash-notifier',
         version='0.0.1',
-        packages=['logstash_notifier'],
+        packages=find_packages(),
         url='https://github.com/dohop/supervisor-logstash-notifier',
         license='Apache 2.0',
         author='aodj',
