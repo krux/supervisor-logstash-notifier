@@ -75,7 +75,7 @@ def main():
     logger.addHandler(logstash_handler(host, port, version=1))
     logger.setLevel(logging.INFO)
 
-    for headers, event_body, event_data in supervisor_events(
+    for headers, event_body, _ in supervisor_events(
             sys.stdin, sys.stdout, *events):
         extra = event_body.copy()
         extra['eventname'] = headers['eventname']

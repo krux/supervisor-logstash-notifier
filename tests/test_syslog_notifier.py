@@ -41,22 +41,25 @@ def strip_volatile(message):
         u'pid',
         u'tries',
     ]
-    record = json.loads(message)
+    message_dict = json.loads(message)
     for key in volatile:
-        if key in record:
-            record.pop(key)
+        if key in message_dict:
+            message_dict.pop(key)
 
-    return record
+    return message_dict
 
 
-def message(eventname, from_state):
+def record(eventname, from_state):
+    """
+    Returns a pre-formatter log line to save on the boilerplate
+    """
     return {
-        u'@version': 1,
+        u'@version': u'1',
         u'eventname': eventname,
         u'from_state': from_state,
         u'groupname': u'messages',
-        u'levelname': u'INFO',
-        u'logger': u'supervisor',
+        u'level': u'INFO',
+        u'logger_name': u'supervisor',
         u'message': u'%s messages' % eventname,
         u'path': u'./syslog_notifier/__init__.py',
         u'processname': u'messages',
@@ -100,9 +103,9 @@ class SupervisorLoggingTestCase(TestCase):
 
             working_directory = os.path.dirname(__file__)
 
+            conf = os.path.join(working_directory, 'supervisord.conf')
             supervisor = subprocess.Popen(
-                ['supervisord', '-c',
-                    os.path.join(working_directory, 'supervisord.conf')],
+                ['supervisord', '-c', conf],
                 env=env,
                 cwd=os.path.dirname(working_directory),
             )
@@ -115,9 +118,9 @@ class SupervisorLoggingTestCase(TestCase):
                 # where it started, then a stopped message
                 # thus: STOPPED->STARTING->STOPPING
                 messages_stop = [
-                    message(u'PROCESS_STATE_STARTING', u'STOPPED'),
-                    message(u'PROCESS_STATE_RUNNING', u'STARTING'),
-                    message(u'PROCESS_STATE_STOPPED', u'STOPPING'),
+                    record(u'PROCESS_STATE_STARTING', u'STOPPED'),
+                    record(u'PROCESS_STATE_RUNNING', u'STARTING'),
+                    record(u'PROCESS_STATE_STOPPED', u'STOPPING'),
                 ]
                 self.assertEqual(
                     map(strip_volatile, messages), messages_stop)
@@ -126,8 +129,8 @@ class SupervisorLoggingTestCase(TestCase):
                 subprocess.call(['supervisorctl', 'start', 'messages'])
                 sleep(3)
                 messages_start = [
-                    message(u'PROCESS_STATE_STARTING', u'STOPPED'),
-                    message(u'PROCESS_STATE_RUNNING', u'STARTING'),
+                    record(u'PROCESS_STATE_STARTING', u'STOPPED'),
+                    record(u'PROCESS_STATE_RUNNING', u'STARTING'),
                 ]
 
                 self.assertEqual(
@@ -137,9 +140,9 @@ class SupervisorLoggingTestCase(TestCase):
                 subprocess.call(['supervisorctl', 'restart', 'messages'])
                 sleep(3)
                 messages_restarting = [
-                    message(u'PROCESS_STATE_STOPPED', u'STOPPING'),
-                    message(u'PROCESS_STATE_STARTING', u'STOPPED'),
-                    message(u'PROCESS_STATE_RUNNING', u'STARTING'),
+                    record(u'PROCESS_STATE_STOPPED', u'STOPPING'),
+                    record(u'PROCESS_STATE_STARTING', u'STOPPED'),
+                    record(u'PROCESS_STATE_RUNNING', u'STARTING'),
                 ]
                 self.assertEqual(
                     map(strip_volatile, messages), messages_restarting)
