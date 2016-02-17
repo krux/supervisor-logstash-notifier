@@ -107,7 +107,6 @@ class SupervisorLoggingTestCase(TestCase):
             supervisor = subprocess.Popen(
                 ['supervisord', '-c', conf],
                 env=env,
-                cwd=os.path.dirname(working_directory),
             )
 
             try:
@@ -123,7 +122,7 @@ class SupervisorLoggingTestCase(TestCase):
                     record('PROCESS_STATE_STOPPED', 'STOPPING'),
                 ]
                 self.assertEqual(
-                    map(strip_volatile, messages), messages_stop)
+                    list(map(strip_volatile, messages)), messages_stop)
                 messages = []
 
                 subprocess.call(['supervisorctl', 'start', 'messages'])
@@ -134,7 +133,7 @@ class SupervisorLoggingTestCase(TestCase):
                 ]
 
                 self.assertEqual(
-                    map(strip_volatile, messages), messages_start)
+                    list(map(strip_volatile, messages)), messages_start)
                 messages = []
 
                 subprocess.call(['supervisorctl', 'restart', 'messages'])
@@ -145,7 +144,7 @@ class SupervisorLoggingTestCase(TestCase):
                     record('PROCESS_STATE_RUNNING', 'STARTING'),
                 ]
                 self.assertEqual(
-                    map(strip_volatile, messages), messages_restarting)
+                    list(map(strip_volatile, messages)), messages_restarting)
             finally:
                 supervisor.terminate()
 
