@@ -66,7 +66,6 @@ def record(eventname, from_state):
 
 
 class SupervisorLoggingTestCase(TestCase):
-
     """
     Test logging.
     """
@@ -77,19 +76,17 @@ class SupervisorLoggingTestCase(TestCase):
         """
         Test logging.
         """
-
         messages = []
 
         class LogstashHandler(socketserver.BaseRequestHandler):
-
             """
             Save received messages.
             """
-
             def handle(self):
                 messages.append(self.request[0].strip().decode())
 
-        logstash_server = socketserver.UDPServer(('0.0.0.0', 0), LogstashHandler)
+        logstash_server = socketserver.UDPServer(
+            ('0.0.0.0', 0), LogstashHandler)
         try:
             threading.Thread(target=logstash_server.serve_forever).start()
 
