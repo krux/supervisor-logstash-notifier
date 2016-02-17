@@ -98,7 +98,8 @@ def main():
         port = int(env['LOGSTASH_PORT'])
         socket_type = env['LOGSTASH_PROTO']
     except KeyError:
-        sys.exit("LOGSTASH_SERVER, LOGSTASH_PORT and LOGSTASH_PROTO are required.")
+        sys.exit("LOGSTASH_SERVER, LOGSTASH_PORT and LOGSTASH_PROTO are "
+                 "required.")
 
     events = ['BACKOFF', 'FATAL', 'EXITED', 'STOPPED', 'STARTING', 'RUNNING']
     events = ['PROCESS_STATE_' + state for state in events]
