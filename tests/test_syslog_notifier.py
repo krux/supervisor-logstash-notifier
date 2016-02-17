@@ -21,12 +21,10 @@ import json
 import os
 import subprocess
 import threading
+from time import sleep
+from unittest import TestCase
 
 from six.moves import socketserver
-
-from time import sleep
-
-from unittest import TestCase
 
 
 def strip_volatile(message):
