@@ -107,6 +107,7 @@ class SupervisorLoggingTestCase(TestCase):
             supervisor = subprocess.Popen(
                 ['supervisord', '-c', conf],
                 env=env,
+                cwd=os.path.dirname(working_directory),
             )
 
             try:
