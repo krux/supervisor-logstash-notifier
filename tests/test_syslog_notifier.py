@@ -19,12 +19,10 @@ Test syslog_notifier
 
 import json
 import os
-try:
-    import socketserver
-except ImportError:
-    import SocketServer as socketserver
 import subprocess
 import threading
+
+from six.moves import socketserver
 
 from time import sleep
 
@@ -52,7 +50,7 @@ def strip_volatile(message):
 
 def record(eventname, from_state):
     """
-    Returns a pre-formatter log line to save on the boilerplate
+    Returns a pre-formatted log line to save on the boilerplate
     """
     return {
         '@version': '1',

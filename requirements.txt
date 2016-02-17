@@ -1,1 +1,2 @@
 python-logstash==0.4.6
+six==1.10.0

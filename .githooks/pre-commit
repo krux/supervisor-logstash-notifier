@@ -108,7 +108,6 @@ class Main(object):
             cmd += ' %%s%s' % target
 
             result = output(cmd % self.index)
-            print(result)
 
             #
             # Get the rating from the result
@@ -121,6 +120,7 @@ class Main(object):
                     % (target, rating, _PYLINT_PASS_THRESHOLD)
                 )
                 print("Re-run with:\n%s\n" % (cmd % ''))
+                print(result)
 
         return ok
 
