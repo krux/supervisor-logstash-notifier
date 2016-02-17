@@ -45,12 +45,18 @@ def eventdata(payload):
     return headers, data
 
 
-def ready(stdout):
+def send_ready(stdout):
+    """
+    Sends the READY signal to supervisor
+    """
     stdout.write('READY\n')
     stdout.flush()
 
 
-def ok(stdout):
+def send_ok(stdout):
+    """
+    Sends an ack to supervisor
+    """
     stdout.write('RESULT 2\nOK')
     stdout.flush()
 
@@ -60,7 +66,7 @@ def supervisor_events(stdin, stdout, *events):
     Runs forever to receive supervisor events
     """
     while True:
-        ready(stdout)
+        send_ready(stdout)
 
         line = stdin.readline()
         headers = get_headers(line)
@@ -69,16 +75,16 @@ def supervisor_events(stdin, stdout, *events):
         event_body, event_data = eventdata(payload)
 
         if headers['eventname'] not in events:
-            ok(stdout)
+            send_ok(stdout)
             continue
 
         if event_body['processname'] == 'syslog-notifier':
-            ok(stdout)
+            send_ok(stdout)
             continue
 
         yield headers, event_body, event_data
 
-        ok(stdout)
+        send_ok(stdout)
 
 
 def main():
