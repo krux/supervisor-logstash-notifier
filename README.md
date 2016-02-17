@@ -2,8 +2,8 @@ This is a port of the [Supervisor-logging](https://github.com/infoxchange/superv
 
 # NOTE: this project is a work in progress.
 
-supervisord-logstash-notifier
-=============================
+supervisor-logstash-notifier
+============================
 
 A [supervisor]( http://supervisord.org/) plugin to stream events to a Logstash instance (for example, Logstash).
 
