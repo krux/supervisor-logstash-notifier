@@ -40,6 +40,7 @@ def strip_volatile(message):
         'host',
         'pid',
         'tries',
+        'stack_info'
     ]
     message_dict = json.loads(message)
     for key in volatile:

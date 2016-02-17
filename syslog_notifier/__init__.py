@@ -23,7 +23,36 @@ import os
 import sys
 
 import logstash
-from supervisor import childutils
+
+
+def get_headers(line):
+    """
+    Parse Supervisor message headers.
+    """
+    return dict([x.split(':') for x in line.split()])
+
+
+def eventdata(payload):
+    """
+    Parse a Supervisor event.
+    """
+    if '\n' in payload:
+        headerinfo, data = payload.split('\n', 1)
+    else:
+        headerinfo = payload
+        data = ''
+    headers = get_headers(headerinfo)
+    return headers, data
+
+
+def ready(stdout):
+    stdout.write('READY\n')
+    stdout.flush()
+
+
+def ok(stdout):
+    stdout.write('RESULT 2\nOK')
+    stdout.flush()
 
 
 def supervisor_events(stdin, stdout, *events):
@@ -31,20 +60,25 @@ def supervisor_events(stdin, stdout, *events):
     Runs forever to receive supervisor events
     """
     while True:
-        headers, payload = childutils.listener.wait(stdin, stdout)
-        event_body, event_data = childutils.eventdata(payload + '\n')
+        ready(stdout)
+
+        line = stdin.readline()
+        headers = get_headers(line)
+
+        payload = stdin.read(int(headers['len']))
+        event_body, event_data = eventdata(payload)
 
         if headers['eventname'] not in events:
-            childutils.listener.ok(stdout)
+            ok(stdout)
             continue
 
         if event_body['processname'] == 'syslog-notifier':
-            childutils.listener.ok(stdout)
+            ok(stdout)
             continue
 
         yield headers, event_body, event_data
 
-        childutils.listener.ok(stdout)
+        ok(stdout)
 
 
 def main():
