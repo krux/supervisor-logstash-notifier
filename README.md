@@ -6,6 +6,7 @@ supervisor-logstash-notifier
 ============================
 
 A [supervisor]( http://supervisord.org/) plugin to stream events to a Logstash instance (for example, Logstash).
+[![Build Status](https://travis-ci.org/dohop/supervisor-logstash-notifier.svg?branch=master)](https://travis-ci.org/dohop/supervisor-logstash-notifier)
 
 Installation
 ------------
@@ -44,4 +45,24 @@ Enable the log events in your program:
 [program:yourprogram]
 stdout_events_enabled = true
 stderr_events_enabled = true
+```
+
+Running with Logstash
+---------------------
+
+Logstash can be simply configured to receive events:
+
+```
+input {
+	tcp {
+		port => 12201
+		codec => json
+	}
+}
+
+output {
+	stdout {
+		codec => rubydebug
+	}
+}
 ```
