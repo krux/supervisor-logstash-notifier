@@ -1,17 +1,25 @@
 language: python
 python:
-    - "2.7"
-    - "3.2"
-    - "3.3"
-    - "3.4"
-    - "3.5"
+- '2.7'
+- '3.2'
+- '3.3'
+- '3.4'
+- '3.5'
 env:
-    - SUPERVISOR_PYTHON_VERSION=2.7
+- SUPERVISOR_PYTHON_VERSION=2.7
 install:
-    - pip install -r requirements.txt
-    - pip install -r test_requirements.txt
-    - ./install_supervisor
+- pip install -r requirements.txt
+- pip install -r test_requirements.txt
+- ./install_supervisor
 script:
-    - .githooks/pre-commit -f
-    - python -m unittest discover
+- .githooks/pre-commit -f
+- python -m unittest discover
 sudo: false
+deploy:
+  provider: pypi
+  user: aodj
+  password:
+    secure: eYZjvBnS5DDTKr8FEmVaws72ReKow2lTv/Xko0eZx4iJniJWh8nloIHbeAlp6BjdgmOv5+sDKCl2V8xPzYl92KaTFeFDEoIjg0kjFUxCS4yMABlz7zB9D28bLkaSN2mukF4+Ci2qyuPuXW2r725BQuya+QHf2t80OuoshkGp6ak6VNOK/yF1nPFzII5p8Tv2Cd/2qLH8zrB8dbclUeWU9nKCkz3F3znqvosKnMmL0FnrPXw8Bw0/X8QtZR01q6ooBRWCFLLV6k3uKbRQlUVhAM2lE3hP+ne5VNR+uz6vNuXnl2DUxMK/4irj29YFf4FK3QIiHkwl5nVAGV0pKneJqHtz5dQpEQ5IeULL8peYH+Xc7Q41yPBrEjNbh8Uuljiroj5rv8V/OPGf6Cise1bbNTaYJWDEfGrPho9p1UmMNOi+8hC8zcvvZkbluLOBtEvn8BUjYCZU1XjDFWLtir/48eMkLe0X1YE/5nYlVx5Uub4solVlY0ykxBj1i8iMwcVevvNHF254BlnFPfiFVLzXEdSk25Fmlbr5IZMcY0QarrTb8x5ZgOd3JCL1wMb2IfRl9huTSdo1+U1nCSAlINGhGGIEGphivIa9GQnNdJsoWJH96hMNGnjjsYpNG3io66UKNWU/sbi7eBOUtUNNhMgy0wq2OVcVhtDvqHpc4Zl/YpA=
+  on:
+    distributions: sdist bdist_wheel
+    repo: dohop/supervisor-logstash-notifier
