@@ -36,10 +36,10 @@ def strip_volatile(message):
     Strip volatile parts (PID, datetime, host) from a logging message.
     """
     volatile = [
-        u'@timestamp',
-        u'host',
-        u'pid',
-        u'tries',
+        '@timestamp',
+        'host',
+        'pid',
+        'tries',
     ]
     message_dict = json.loads(message)
     for key in volatile:
@@ -54,17 +54,17 @@ def record(eventname, from_state):
     Returns a pre-formatter log line to save on the boilerplate
     """
     return {
-        u'@version': u'1',
-        u'eventname': eventname,
-        u'from_state': from_state,
-        u'groupname': u'messages',
-        u'level': u'INFO',
-        u'logger_name': u'supervisor',
-        u'message': u'%s messages' % eventname,
-        u'path': u'./syslog_notifier/__init__.py',
-        u'processname': u'messages',
-        u'tags': [],
-        u'type': u'logstash'
+        '@version': '1',
+        'eventname': eventname,
+        'from_state': from_state,
+        'groupname': 'messages',
+        'level': 'INFO',
+        'logger_name': 'supervisor',
+        'message': '%s messages' % eventname,
+        'path': './syslog_notifier/__init__.py',
+        'processname': 'messages',
+        'tags': [],
+        'type': 'logstash'
     }
 
 
@@ -118,9 +118,9 @@ class SupervisorLoggingTestCase(TestCase):
                 # where it started, then a stopped message
                 # thus: STOPPED->STARTING->STOPPING
                 messages_stop = [
-                    record(u'PROCESS_STATE_STARTING', u'STOPPED'),
-                    record(u'PROCESS_STATE_RUNNING', u'STARTING'),
-                    record(u'PROCESS_STATE_STOPPED', u'STOPPING'),
+                    record('PROCESS_STATE_STARTING', 'STOPPED'),
+                    record('PROCESS_STATE_RUNNING', 'STARTING'),
+                    record('PROCESS_STATE_STOPPED', 'STOPPING'),
                 ]
                 self.assertEqual(
                     map(strip_volatile, messages), messages_stop)
@@ -129,8 +129,8 @@ class SupervisorLoggingTestCase(TestCase):
                 subprocess.call(['supervisorctl', 'start', 'messages'])
                 sleep(3)
                 messages_start = [
-                    record(u'PROCESS_STATE_STARTING', u'STOPPED'),
-                    record(u'PROCESS_STATE_RUNNING', u'STARTING'),
+                    record('PROCESS_STATE_STARTING', 'STOPPED'),
+                    record('PROCESS_STATE_RUNNING', 'STARTING'),
                 ]
 
                 self.assertEqual(
@@ -140,9 +140,9 @@ class SupervisorLoggingTestCase(TestCase):
                 subprocess.call(['supervisorctl', 'restart', 'messages'])
                 sleep(3)
                 messages_restarting = [
-                    record(u'PROCESS_STATE_STOPPED', u'STOPPING'),
-                    record(u'PROCESS_STATE_STARTING', u'STOPPED'),
-                    record(u'PROCESS_STATE_RUNNING', u'STARTING'),
+                    record('PROCESS_STATE_STOPPED', 'STOPPING'),
+                    record('PROCESS_STATE_STARTING', 'STOPPED'),
+                    record('PROCESS_STATE_RUNNING', 'STARTING'),
                 ]
                 self.assertEqual(
                     map(strip_volatile, messages), messages_restarting)
