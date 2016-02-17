@@ -108,6 +108,7 @@ class Main(object):
             cmd += ' %%s%s' % target
 
             result = output(cmd % self.index)
+            print(result)
 
             #
             # Get the rating from the result
