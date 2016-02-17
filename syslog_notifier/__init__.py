@@ -18,50 +18,12 @@
 A module for dispatching Supervisor PROCESS_STATE events to a Syslog instance
 """
 
-import os
-import re
-import sys
-import socket
-import time
-from supervisor import childutils
-
 import logging
-from logging.handlers import SysLogHandler
+import os
+import sys
 
-
-class PalletFormatter(logging.Formatter):
-
-    """
-    A formatter for the Pallet environment.
-    """
-
-    HOSTNAME = re.sub(
-        r':\d+$', '', os.getenv('SITE_DOMAIN', socket.gethostname()))
-    FORMAT = '%(asctime)s {hostname} %(name)s[%(process)d]: %(message)s'.\
-        format(hostname=HOSTNAME)
-    DATE_FORMAT = '%Y-%m-%dT%H:%M:%S'
-
-    converter = time.gmtime
-
-    def __init__(self):
-        super(PalletFormatter, self).__init__(
-            fmt=self.FORMAT, datefmt=self.DATE_FORMAT)
-
-    def formatTime(self, record, datefmt=None):
-        """
-        Format time, including milliseconds.
-        """
-
-        formatted = super(PalletFormatter, self).formatTime(
-            record, datefmt=datefmt)
-        return formatted + '.%03dZ' % record.msecs
-
-    def format(self, record):
-        # strip newlines
-        message = super(PalletFormatter, self).format(record)
-        message = message.replace('\n', ' ')
-        message += '\n'
-        return message
+import logstash
+from supervisor import childutils
 
 
 def supervisor_events(stdin, stdout, *events):
@@ -69,16 +31,18 @@ def supervisor_events(stdin, stdout, *events):
     Runs forever to receive supervisor events
     """
     while True:
-        childutils.listener.ready()
-
         headers, payload = childutils.listener.wait(stdin, stdout)
-        event_headers, event_data = childutils.eventdata(payload+'\n')
+        event_body, event_data = childutils.eventdata(payload + '\n')
 
         if headers['eventname'] not in events:
             childutils.listener.ok(stdout)
             continue
 
-        yield event_headers, event_data
+        if event_body['processname'] == 'syslog-notifier':
+            childutils.listener.ok(stdout)
+            continue
+
+        yield headers, event_body, event_data
 
         childutils.listener.ok(stdout)
 
@@ -87,32 +51,38 @@ def main():
     """
     Main application loop.
     """
-    host = os.getenv('SYSLOG_SERVER', None)
-    port = int(os.getenv('SYSLOG_PORT', None))
-    socket_type = socket.SOCK_DGRAM if os.getenv(
-        'SYSLOG_PROTO', None) == 'udp' else socket.SOCK_STREAM
+    env = os.environ
 
-    if None in ('SYSLOG_SERVER', 'SYSLOG_PORT', 'SYSLOG_PROTO'):
-        # one of them hasn't got a value, exit
+    try:
+        host = env['SYSLOG_SERVER']
+        port = int(env['SYSLOG_PORT'])
+        socket_type = env['SYSLOG_PROTO']
+    except KeyError:
         sys.exit("SYSLOG_SERVER, SYSLOG_PORT and SYSLOG_PROTO are required.")
 
     events = ['BACKOFF', 'FATAL', 'EXITED', 'STOPPED', 'STARTING', 'RUNNING']
-    events = ['PROCESS_STATE_'+state for state in events]
-    handler = SysLogHandler(
-        address=(host, port), socktype=socket_type, *events)
+    events = ['PROCESS_STATE_' + state for state in events]
 
-    for event_headers, event_data in supervisor_events(sys.stdin, sys.stdout):
-        event = logging.LogRecord(
-            name=event_headers['processname'],
-            level=logging.INFO,
-            pathname=None,
-            lineno=0,
-            msg=event_data,
-            args=(),
-            exc_info=None,
+    logstash_handler = None
+    if socket_type == 'udp':
+        logstash_handler = logstash.UDPLogstashHandler
+    elif socket_type == 'tcp':
+        logstash_handler = logstash.TCPLogstashHandler
+    else:
+        raise RuntimeError('Unknown protocol defined: %r' % socket_type)
+
+    logger = logging.getLogger('supervisor')
+    logger.addHandler(logstash_handler(host, port, version=1))
+    logger.setLevel(logging.INFO)
+
+    for headers, event_body, event_data in supervisor_events(
+            sys.stdin, sys.stdout, *events):
+        extra = event_body.copy()
+        extra['eventname'] = headers['eventname']
+        logger.info(
+            '%s %s', headers['eventname'], event_body['processname'],
+            extra=extra,
         )
-        event.process = int(event_headers['pid'])
-        handler.handle(event)
 
 if __name__ == '__main__':
     main()

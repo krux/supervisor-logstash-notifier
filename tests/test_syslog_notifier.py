@@ -17,9 +17,8 @@
 Test syslog_notifier
 """
 
+import json
 import os
-import re
-import socket
 try:
     import socketserver
 except ImportError:
@@ -34,21 +33,40 @@ from unittest import TestCase
 
 def strip_volatile(message):
     """
-    Strip volatile parts (PID, datetime) from a logging message.
+    Strip volatile parts (PID, datetime, host) from a logging message.
     """
+    volatile = [
+        u'@timestamp',
+        u'host',
+        u'pid',
+        u'tries',
+    ]
+    record = json.loads(message)
+    for key in volatile:
+        if key in record:
+            record.pop(key)
 
-    volatile = (
-        (socket.gethostname(), 'HOST'),
-        (r'\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z', 'DATE'),
-    )
+    return record
 
-    for regexp, replacement in volatile:
-        message = re.sub(regexp, replacement, message)
 
-    return message
+def message(eventname, from_state):
+    return {
+        u'@version': 1,
+        u'eventname': eventname,
+        u'from_state': from_state,
+        u'groupname': u'messages',
+        u'levelname': u'INFO',
+        u'logger': u'supervisor',
+        u'message': u'%s messages' % eventname,
+        u'path': u'./syslog_notifier/__init__.py',
+        u'processname': u'messages',
+        u'tags': [],
+        u'type': u'logstash'
+    }
 
 
 class SupervisorLoggingTestCase(TestCase):
+
     """
     Test logging.
     """
@@ -63,6 +81,7 @@ class SupervisorLoggingTestCase(TestCase):
         messages = []
 
         class SyslogHandler(socketserver.BaseRequestHandler):
+
             """
             Save received messages.
             """
@@ -79,29 +98,51 @@ class SupervisorLoggingTestCase(TestCase):
             env['SYSLOG_PORT'] = str(syslog.server_address[1])
             env['SYSLOG_PROTO'] = 'udp'
 
-            mydir = os.path.dirname(__file__)
+            working_directory = os.path.dirname(__file__)
 
             supervisor = subprocess.Popen(
-                ['supervisord', '-c', os.path.join(mydir, 'supervisord.conf')],
+                ['supervisord', '-c',
+                    os.path.join(working_directory, 'supervisord.conf')],
                 env=env,
+                cwd=os.path.dirname(working_directory),
             )
-            try:
 
+            try:
                 sleep(3)
 
-                pid = subprocess.check_output(
-                    ['supervisorctl', 'pid', 'messages']
-                ).decode().strip()
+                subprocess.call(['supervisorctl', 'stop', 'messages'])
+                # we've stopped a process so should get the first message
+                # where it started, then a stopped message
+                # thus: STOPPED->STARTING->STOPPING
+                messages_stop = [
+                    message(u'PROCESS_STATE_STARTING', u'STOPPED'),
+                    message(u'PROCESS_STATE_RUNNING', u'STARTING'),
+                    message(u'PROCESS_STATE_STOPPED', u'STOPPING'),
+                ]
+                self.assertEqual(
+                    map(strip_volatile, messages), messages_stop)
+                messages = []
 
-                sleep(8)
+                subprocess.call(['supervisorctl', 'start', 'messages'])
+                sleep(3)
+                messages_start = [
+                    message(u'PROCESS_STATE_STARTING', u'STOPPED'),
+                    message(u'PROCESS_STATE_RUNNING', u'STARTING'),
+                ]
 
                 self.assertEqual(
-                    list(map(strip_volatile, messages)),
-                    ['<14>DATE HOST messages[{pid}]: Test {i} \n\x00'.format(
-                        pid=pid,
-                        i=i)
-                     for i in range(4)]
-                )
+                    map(strip_volatile, messages), messages_start)
+                messages = []
+
+                subprocess.call(['supervisorctl', 'restart', 'messages'])
+                sleep(3)
+                messages_restarting = [
+                    message(u'PROCESS_STATE_STOPPED', u'STOPPING'),
+                    message(u'PROCESS_STATE_STARTING', u'STOPPED'),
+                    message(u'PROCESS_STATE_RUNNING', u'STARTING'),
+                ]
+                self.assertEqual(
+                    map(strip_volatile, messages), messages_restarting)
             finally:
                 supervisor.terminate()
 
