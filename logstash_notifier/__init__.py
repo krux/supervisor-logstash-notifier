@@ -78,7 +78,7 @@ def supervisor_events(stdin, stdout, *events):
             send_ok(stdout)
             continue
 
-        if event_body['processname'] == 'logstash©-notifier':
+        if event_body['processname'] == 'logstash-notifier':
             send_ok(stdout)
             continue
 
