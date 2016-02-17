@@ -14,7 +14,7 @@
 # limitations under the License.
 
 """
-Test syslog_notifier
+Test logstash_notifier
 """
 
 import json
@@ -58,7 +58,7 @@ def record(eventname, from_state):
         'level': 'INFO',
         'logger_name': 'supervisor',
         'message': '%s messages' % eventname,
-        'path': './syslog_notifier/__init__.py',
+        'path': './logstash_notifier/__init__.py',
         'processname': 'messages',
         'tags': [],
         'type': 'logstash'
@@ -80,7 +80,7 @@ class SupervisorLoggingTestCase(TestCase):
 
         messages = []
 
-        class SyslogHandler(socketserver.BaseRequestHandler):
+        class LogstashHandler(socketserver.BaseRequestHandler):
 
             """
             Save received messages.
@@ -89,14 +89,14 @@ class SupervisorLoggingTestCase(TestCase):
             def handle(self):
                 messages.append(self.request[0].strip().decode())
 
-        syslog = socketserver.UDPServer(('0.0.0.0', 0), SyslogHandler)
+        logstash_server = socketserver.UDPServer(('0.0.0.0', 0), LogstashHandler)
         try:
-            threading.Thread(target=syslog.serve_forever).start()
+            threading.Thread(target=logstash_server.serve_forever).start()
 
             env = os.environ.copy()
-            env['SYSLOG_SERVER'] = syslog.server_address[0]
-            env['SYSLOG_PORT'] = str(syslog.server_address[1])
-            env['SYSLOG_PROTO'] = 'udp'
+            env['LOGSTASH_SERVER'] = logstash_server.server_address[0]
+            env['LOGSTASH_PORT'] = str(logstash_server.server_address[1])
+            env['LOGSTASH_PROTO'] = 'udp'
 
             working_directory = os.path.dirname(__file__)
 
@@ -147,4 +147,4 @@ class SupervisorLoggingTestCase(TestCase):
                 supervisor.terminate()
 
         finally:
-            syslog.shutdown()
+            logstash_server.shutdown()

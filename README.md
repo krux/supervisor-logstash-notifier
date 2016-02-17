@@ -2,10 +2,10 @@ This is a port of the [Supervisor-logging](https://github.com/infoxchange/superv
 
 # NOTE: this project is a work in progress.
 
-supervisord-syslog-notifier
-===========================
+supervisord-logstash-notifier
+=============================
 
-A [supervisor]( http://supervisord.org/) plugin to stream events to an external Syslog instance (for example, Logstash).
+A [supervisor]( http://supervisord.org/) plugin to stream events to a Logstash instance (for example, Logstash).
 
 Installation
 ------------
@@ -13,7 +13,7 @@ Installation
 Python 2.7 or Python 3.2+ is required.
 
 ```
-pip install supervisord-syslog-notifier
+pip install supervisord-logstash-notifier
 ```
 
 Note that supervisor itself does not yet work on Python 3, though it can be
@@ -34,7 +34,7 @@ Add the plugin as an event listener:
 
 ```
 [eventlistener:logging]
-command = supervisor_syslog_notifier
+command = supervisord_logstash_notifier
 events = PROCESS_STATE
 ```
 

@@ -22,18 +22,18 @@ from setuptools import setup
 with open('requirements.txt') as requirements, \
         open('test_requirements.txt') as test_requirements:
     setup(
-        name='supervisord-syslog-notifier',
+        name='supervisord-logstash-notifier',
         version='0.0.1',
-        packages=['syslog_notifier'],
-        url='https://github.com/dohop/supervisord-syslog-notifier',
+        packages=['logstash_notifier'],
+        url='https://github.com/dohop/supervisord-logstash-notifier',
         license='Apache 2.0',
         author='aodj',
         author_email='alexander@dohop.com',
-        description='Stream supervisord events to a logstash/syslog instance',
+        description='Stream supervisord events to a logstash instance',
         long_description=open('README.md').read(),
         entry_points={
             'console_scripts': [
-                'syslog_notifier = syslog_notifier:main'
+                'logstash_notifier = logstash_notifier:main'
             ]
         },
         install_requires=requirements.read().splitlines(),

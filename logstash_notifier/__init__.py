@@ -78,7 +78,7 @@ def supervisor_events(stdin, stdout, *events):
             send_ok(stdout)
             continue
 
-        if event_body['processname'] == 'syslog-notifier':
+        if event_body['processname'] == 'logstash©-notifier':
             send_ok(stdout)
             continue
 
@@ -94,11 +94,11 @@ def main():
     env = os.environ
 
     try:
-        host = env['SYSLOG_SERVER']
-        port = int(env['SYSLOG_PORT'])
-        socket_type = env['SYSLOG_PROTO']
+        host = env['LOGSTASH_SERVER']
+        port = int(env['LOGSTASH_PORT'])
+        socket_type = env['LOGSTASH_PROTO']
     except KeyError:
-        sys.exit("SYSLOG_SERVER, SYSLOG_PORT and SYSLOG_PROTO are required.")
+        sys.exit("LOGSTASH_SERVER, LOGSTASH_PORT and LOGSTASH_PROTO are required.")
 
     events = ['BACKOFF', 'FATAL', 'EXITED', 'STOPPED', 'STARTING', 'RUNNING']
     events = ['PROCESS_STATE_' + state for state in events]
