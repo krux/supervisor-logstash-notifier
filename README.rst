@@ -4,7 +4,7 @@ This is a port of the
 `Supervisor-logging <https://github.com/infoxchange/supervisor-logging>`__
 project. Rather than capture loglines, as Supervisor-logging does it's
 intended to capture the
-```PROCESS_STATE`` <http://supervisord.org/events.html#event-listeners-and-event-notifications>`__
+`PROCESS_STATE <http://supervisord.org/events.html#event-listeners-and-event-notifications>`__
 events that Supervisor emits.
 
 supervisor-logstash-notifier
