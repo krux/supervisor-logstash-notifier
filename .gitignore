@@ -5,3 +5,4 @@ build
 venv
 *.pyc
 venv3.4
+supervisor_logstash_notifier.egg-info
