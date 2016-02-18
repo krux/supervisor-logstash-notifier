@@ -11,7 +11,7 @@ supervisor-logstash-notifier
 ============================
 
 A `supervisor <http://supervisord.org/>`__ plugin to stream events to a
-Logstash instance (for example, Logstash).
+Logstash instance.
 
 Installation
 ------------
