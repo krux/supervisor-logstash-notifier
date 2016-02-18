@@ -30,7 +30,7 @@ with open('requirements.txt') as requirements, \
         author='aodj',
         author_email='alexander@dohop.com',
         description='Stream supervisor events to a logstash instance',
-        long_description=open('README.md').read(),
+        long_description=open('README.rst').read(),
         entry_points={
             'console_scripts': [
                 'logstash_notifier = logstash_notifier:main'
