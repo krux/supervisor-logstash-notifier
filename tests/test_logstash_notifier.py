@@ -17,131 +17,63 @@
 Test logstash_notifier
 """
 
-import json
-import os
 import subprocess
-import threading
 from time import sleep
-from unittest import TestCase
 
-from six.moves import socketserver
-
-
-def strip_volatile(message):
-    """
-    Strip volatile parts (PID, datetime, host) from a logging message.
-    """
-    volatile = [
-        '@timestamp',
-        'host',
-        'pid',
-        'tries',
-        'stack_info'
-    ]
-    message_dict = json.loads(message)
-    for key in volatile:
-        if key in message_dict:
-            message_dict.pop(key)
-
-    return message_dict
+from .utilities import BaseSupervisorTestCase, record
 
 
-def record(eventname, from_state):
-    """
-    Returns a pre-formatted log line to save on the boilerplate
-    """
-    return {
-        '@version': '1',
-        'eventname': eventname,
-        'from_state': from_state,
-        'groupname': 'messages',
-        'level': 'INFO',
-        'logger_name': 'supervisor',
-        'message': '%s messages' % eventname,
-        'path': './logstash_notifier/__init__.py',
-        'processname': 'messages',
-        'tags': [],
-        'type': 'logstash'
-    }
-
-
-class SupervisorLoggingTestCase(TestCase):
+class SupervisorLoggingTestCase(BaseSupervisorTestCase):
     """
     Test logging.
     """
-
-    maxDiff = None
-
     def test_logging(self):
         """
         Test logging.
         """
-        messages = []
-
-        class LogstashHandler(socketserver.BaseRequestHandler):
-            """
-            Save received messages.
-            """
-            def handle(self):
-                messages.append(self.request[0].strip().decode())
-
-        logstash_server = socketserver.UDPServer(
-            ('0.0.0.0', 0), LogstashHandler)
+        logstash = self.run_logstash()
         try:
-            threading.Thread(target=logstash_server.serve_forever).start()
+            environment = {
+                'LOGSTASH_SERVER': logstash.server_address[0],
+                'LOGSTASH_PORT': str(logstash.server_address[1]),
+                'LOGSTASH_PROTO': 'udp'
+            }
 
-            env = os.environ.copy()
-            env['LOGSTASH_SERVER'] = logstash_server.server_address[0]
-            env['LOGSTASH_PORT'] = str(logstash_server.server_address[1])
-            env['LOGSTASH_PROTO'] = 'udp'
-
-            working_directory = os.path.dirname(__file__)
-
-            conf = os.path.join(working_directory, 'supervisord.conf')
-            supervisor = subprocess.Popen(
-                ['supervisord', '-c', conf],
-                env=env,
-                cwd=os.path.dirname(working_directory),
-            )
+            self.run_supervisor(environment, 'supervisord.conf')
+            sleep(3)
 
             try:
-                sleep(3)
-
                 subprocess.call(['supervisorctl', 'stop', 'messages'])
                 # we've stopped a process so should get the first message
                 # where it started, then a stopped message
                 # thus: STOPPED->STARTING->STOPPING
-                messages_stop = [
+                expected = [
                     record('PROCESS_STATE_STARTING', 'STOPPED'),
                     record('PROCESS_STATE_RUNNING', 'STARTING'),
                     record('PROCESS_STATE_STOPPED', 'STOPPING'),
                 ]
-                self.assertEqual(
-                    list(map(strip_volatile, messages)), messages_stop)
-                messages = []
+                self.assertEqual(self.messages(clear_buffer=True), expected)
+                self.clear_message_buffer()
 
                 subprocess.call(['supervisorctl', 'start', 'messages'])
                 sleep(3)
-                messages_start = [
+                expected = [
                     record('PROCESS_STATE_STARTING', 'STOPPED'),
                     record('PROCESS_STATE_RUNNING', 'STARTING'),
                 ]
 
-                self.assertEqual(
-                    list(map(strip_volatile, messages)), messages_start)
-                messages = []
+                self.assertEqual(self.messages(clear_buffer=True), expected)
+                self.clear_message_buffer()
 
                 subprocess.call(['supervisorctl', 'restart', 'messages'])
                 sleep(3)
-                messages_restarting = [
+                expected = [
                     record('PROCESS_STATE_STOPPED', 'STOPPING'),
                     record('PROCESS_STATE_STARTING', 'STOPPED'),
                     record('PROCESS_STATE_RUNNING', 'STARTING'),
                 ]
-                self.assertEqual(
-                    list(map(strip_volatile, messages)), messages_restarting)
+                self.assertEqual(self.messages(clear_buffer=True), expected)
             finally:
-                supervisor.terminate()
-
+                self.shutdown_supervisor()
         finally:
-            logstash_server.shutdown()
+            self.shutdown_logstash()
