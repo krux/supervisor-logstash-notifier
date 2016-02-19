@@ -53,7 +53,6 @@ class SupervisorLoggingTestCase(BaseSupervisorTestCase):
                     record('PROCESS_STATE_STOPPED', 'STOPPING'),
                 ]
                 self.assertEqual(self.messages(clear_buffer=True), expected)
-                self.clear_message_buffer()
 
                 subprocess.call(['supervisorctl', 'start', 'messages'])
                 sleep(3)
@@ -63,7 +62,6 @@ class SupervisorLoggingTestCase(BaseSupervisorTestCase):
                 ]
 
                 self.assertEqual(self.messages(clear_buffer=True), expected)
-                self.clear_message_buffer()
 
                 subprocess.call(['supervisorctl', 'restart', 'messages'])
                 sleep(3)
