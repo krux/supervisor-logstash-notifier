@@ -49,7 +49,7 @@ events = PROCESS_STATE
 '''
 
             self.run_supervisor(environment, config)
-            startup_messages = self.messages(clear_buffer=True, wait_for=2)
+            self.messages(clear_buffer=True, wait_for=2)
 
             try:
                 subprocess.call(['supervisorctl', 'stop', 'messages'])
@@ -108,7 +108,7 @@ events = PROCESS_STATE
 '''
 
             self.run_supervisor(environment, config)
-            startup_messages = self.messages(clear_buffer=True, wait_for=2)
+            self.messages(clear_buffer=True, wait_for=2)
 
             try:
                 subprocess.call(['supervisorctl', 'stop', 'messages'])
