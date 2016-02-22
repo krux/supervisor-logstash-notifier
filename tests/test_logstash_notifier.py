@@ -79,10 +79,10 @@ class SupervisorEnvironmentLoggingTestCase(BaseSupervisorTestCase):
     """
     Test case for logging extra environment variables
     """
-    
-    def add_to_environment_and_test_logging(self, include=None):
+
+    def _test_environment_logging(self, include=None):
         """
-        test logging of env variables 
+        test logging of env variables
         """
         logstash = self.run_logstash()
         try:
@@ -118,11 +118,11 @@ class SupervisorEnvironmentLoggingTestCase(BaseSupervisorTestCase):
         If the logger is configured to add two environment variables, FRUITS
         and VEGETABLES, but neither is set, we shouldn't get anything extra
         """
-        for message in self.add_to_environment_and_test_logging({}):
+        for message in self._test_environment_logging({}):
             # should have no additional added values since we asked for an
             # empty dict to be added
             self.assertTrue('env_vars' not in message)
-    
+
     def test_only_one_value_set(self):
         """
         If only one of them is set, we should only see that one in the logged
@@ -131,10 +131,10 @@ class SupervisorEnvironmentLoggingTestCase(BaseSupervisorTestCase):
         env = {
             'FRUITS': 'pineapple,raspberry,kiwi'
         }
-        for message in self.add_to_environment_and_test_logging(env):
+        for message in self._test_environment_logging(env):
             self.assertTrue('env_vars' in message)
             self.assertDictContainsSubset(env, message['env_vars'])
-    
+
     def test_both_values_set(self):
         """
         If both of them is set, we should get both returned in the logged
@@ -144,6 +144,6 @@ class SupervisorEnvironmentLoggingTestCase(BaseSupervisorTestCase):
             'FRUITS': 'pineapple,raspberry,kiwi',
             'VEGETABLES': 'sweet potato,leek,mushroom'
         }
-        for message in self.add_to_environment_and_test_logging(env):
+        for message in self._test_environment_logging(env):
             self.assertTrue('env_vars' in message)
             self.assertDictContainsSubset(env, message['env_vars'])
