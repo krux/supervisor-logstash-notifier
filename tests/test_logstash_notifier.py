@@ -41,15 +41,13 @@ class SupervisorLoggingTestCase(BaseSupervisorTestCase):
 
             self.run_supervisor(environment, 'supervisord.conf')
             sleep(3)
+            # clear the messages from when supervisor started the script
+            self.clear_message_buffer()
 
             try:
                 subprocess.call(['supervisorctl', 'stop', 'messages'])
-                # we've stopped a process so should get the first message
-                # where it started, then a stopped message
-                # thus: STOPPED->STARTING->STOPPING
+                sleep(3)
                 expected = [
-                    record('PROCESS_STATE_STARTING', 'STOPPED'),
-                    record('PROCESS_STATE_RUNNING', 'STARTING'),
                     record('PROCESS_STATE_STOPPED', 'STOPPING'),
                 ]
                 self.assertEqual(self.messages(clear_buffer=True), expected)
@@ -75,3 +73,77 @@ class SupervisorLoggingTestCase(BaseSupervisorTestCase):
                 self.shutdown_supervisor()
         finally:
             self.shutdown_logstash()
+
+
+class SupervisorEnvironmentLoggingTestCase(BaseSupervisorTestCase):
+    """
+    Test case for logging extra environment variables
+    """
+    
+    def add_to_environment_and_test_logging(self, include=None):
+        """
+        test logging of env variables 
+        """
+        logstash = self.run_logstash()
+        try:
+            environment = {
+                'LOGSTASH_SERVER': logstash.server_address[0],
+                'LOGSTASH_PORT': str(logstash.server_address[1]),
+                'LOGSTASH_PROTO': 'udp'
+            }
+            if include is not None:
+                environment.update(include)
+
+            self.run_supervisor(environment, 'supervisord_env_logging.conf')
+            sleep(3)
+            self.clear_message_buffer()
+
+            try:
+                subprocess.call(['supervisorctl', 'stop', 'messages'])
+                sleep(3)
+
+                received = self.messages(clear_buffer=True)
+                # should only have the 'stopping' message
+                self.assertTrue(len(received) == 1)
+                message = received[0]
+
+                yield message
+            finally:
+                self.shutdown_supervisor()
+        finally:
+            self.shutdown_logstash()
+
+    def test_not_present(self):
+        """
+        If the logger is configured to add two environment variables, FRUITS
+        and VEGETABLES, but neither is set, we shouldn't get anything extra
+        """
+        for message in self.add_to_environment_and_test_logging({}):
+            # should have no additional added values since we asked for an
+            # empty dict to be added
+            self.assertTrue('env_vars' not in message)
+    
+    def test_only_one_value_set(self):
+        """
+        If only one of them is set, we should only see that one in the logged
+        message
+        """
+        env = {
+            'FRUITS': 'pineapple,raspberry,kiwi'
+        }
+        for message in self.add_to_environment_and_test_logging(env):
+            self.assertTrue('env_vars' in message)
+            self.assertDictContainsSubset(env, message['env_vars'])
+    
+    def test_both_values_set(self):
+        """
+        If both of them is set, we should get both returned in the logged
+        message
+        """
+        env = {
+            'FRUITS': 'pineapple,raspberry,kiwi',
+            'VEGETABLES': 'sweet potato,leek,mushroom'
+        }
+        for message in self.add_to_environment_and_test_logging(env):
+            self.assertTrue('env_vars' in message)
+            self.assertDictContainsSubset(env, message['env_vars'])

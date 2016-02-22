@@ -22,6 +22,7 @@ import os
 import subprocess
 import threading
 
+from time import sleep
 from unittest import TestCase
 from six.moves import socketserver
 
@@ -68,13 +69,16 @@ class BaseSupervisorTestCase(TestCase):
         Shuts Supervisor down
         """
         self.supervisor.terminate()
+        while self.supervisor.poll() is None:
+            # need to wait while the process kills off it's children and exits
+            # so that it doesn't block the port
+            sleep(1)
 
     def run_logstash(self):
         """
         Runs a socketserver instance emulating Logstash
         """
-        self.logstash = socketserver.UDPServer(
-            ('0.0.0.0', 0), LogstashHandler)
+        self.logstash = socketserver.UDPServer(('0.0.0.0', 0), LogstashHandler)
         threading.Thread(target=self.logstash.serve_forever).start()
         return self.logstash
 
