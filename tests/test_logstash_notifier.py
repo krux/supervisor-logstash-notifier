@@ -143,7 +143,7 @@ events = PROCESS_STATE
         }
         for message in self._test_environment_logging(env):
             self.assertTrue('user_data' in message)
-            self.assertDictContainsSubset(env, message['user_data'])
+            self.assertDictEqual(env, message['user_data'])
 
     def test_both_values_set(self):
         """
@@ -156,7 +156,7 @@ events = PROCESS_STATE
         }
         for message in self._test_environment_logging(env):
             self.assertTrue('user_data' in message)
-            self.assertDictContainsSubset(env, message['user_data'])
+            self.assertDictEqual(env, message['user_data'])
 
 
 class SupervisorKeyvalsLoggingTestCase(BaseSupervisorTestCase):
