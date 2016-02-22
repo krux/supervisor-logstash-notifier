@@ -100,14 +100,22 @@ class BaseSupervisorTestCase(TestCase):
         """
         self.logstash.shutdown()
 
-    def messages(self, clear_buffer=False):
+    def messages(self, clear_buffer=False, wait_for=None):
         """
         Returns the contents of the logstash message buffer
         """
-        messages = self.logstash.RequestHandlerClass.messages
+        messages = []
+        if wait_for is not None:
+            while len(messages) < wait_for:
+                sleep(0.1)
+                messages = self.logstash.RequestHandlerClass.messages[:]
+        else:
+            messages = self.logstash.RequestHandlerClass.messages[:]
+
         parsed_messages = list(map(strip_volatile, messages))
         if clear_buffer:
             self.clear_message_buffer()
+
         return parsed_messages
 
     def clear_message_buffer(self):

@@ -56,29 +56,29 @@ events = PROCESS_STATE
 
             try:
                 subprocess.call(['supervisorctl', 'stop', 'messages'])
-                sleep(3)
                 expected = [
                     record('PROCESS_STATE_STOPPED', 'STOPPING'),
                 ]
-                self.assertEqual(self.messages(clear_buffer=True), expected)
+                received = self.messages(clear_buffer=True, wait_for=1)
+                self.assertEqual(received, expected)
 
                 subprocess.call(['supervisorctl', 'start', 'messages'])
-                sleep(3)
                 expected = [
                     record('PROCESS_STATE_STARTING', 'STOPPED'),
                     record('PROCESS_STATE_RUNNING', 'STARTING'),
                 ]
 
-                self.assertEqual(self.messages(clear_buffer=True), expected)
+                received = self.messages(clear_buffer=True, wait_for=2)
+                self.assertEqual(received, expected)
 
                 subprocess.call(['supervisorctl', 'restart', 'messages'])
-                sleep(3)
                 expected = [
                     record('PROCESS_STATE_STOPPED', 'STOPPING'),
                     record('PROCESS_STATE_STARTING', 'STOPPED'),
                     record('PROCESS_STATE_RUNNING', 'STARTING'),
                 ]
-                self.assertEqual(self.messages(clear_buffer=True), expected)
+                received = self.messages(clear_buffer=True, wait_for=3)
+                self.assertEqual(received, expected)
             finally:
                 self.shutdown_supervisor()
         finally:
@@ -116,9 +116,7 @@ events = PROCESS_STATE
 
             try:
                 subprocess.call(['supervisorctl', 'stop', 'messages'])
-                sleep(3)
-
-                received = self.messages(clear_buffer=True)
+                received = self.messages(clear_buffer=True, wait_for=1)
                 # should only have the 'stopping' message
                 self.assertTrue(len(received) == 1)
                 message = received[0]
