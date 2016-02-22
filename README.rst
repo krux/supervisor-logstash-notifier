@@ -63,7 +63,7 @@ by specifying the name of the environment variables to include:
 ::
 
     [eventlistener:logging]
-    command=IPV4=`ec2metadata --local-ipv4`; logstash_notifier --include IPV4
+    command=export IPV4=`ec2metadata --local-ipv4`; logstash_notifier --include IPV4
     events=PROCESS_STATE
 
 Running with Logstash
