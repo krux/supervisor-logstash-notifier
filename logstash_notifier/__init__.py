@@ -138,6 +138,7 @@ def main(include):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--include', nargs='*', default=list())
+    parser.add_argument('-i', '--include', nargs='*', default=list(),
+                        help='include named environment variables in messages')
     args = parser.parse_args()
     main(include=args.include)

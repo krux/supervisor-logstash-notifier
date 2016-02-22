@@ -54,6 +54,18 @@ shell, you can pass them in via Supervisor's configuration:
     command=logstash_notifier
     events=PROCESS_STATE
 
+Advanced Usage
+--------------
+
+It is also possible to include environment variables in the event messages, 
+by specifying the name of the environment variables to include:
+
+::
+
+    [eventlistener:logging]
+    command=IPV4=`ec2metadata --local-ipv4`; logstash_notifier --include IPV4
+    events=PROCESS_STATE
+
 Running with Logstash
 ---------------------
 
