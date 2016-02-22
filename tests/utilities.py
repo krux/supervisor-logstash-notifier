@@ -68,7 +68,7 @@ class BaseSupervisorTestCase(TestCase):
         with open(template_path) as template:
             configuration = template.read()
             configuration += configuration_string
-            self.scratch.write('supervisor.conf', configuration)
+            self.scratch.write('supervisor.conf', configuration, 'utf-8')
 
         self.supervisor = subprocess.Popen(
             ['supervisord', '-c', self.scratch.getpath('supervisor.conf')],
@@ -153,4 +153,3 @@ def record(eventname, from_state):
         'tags': [],
         'type': 'logstash'
     }
-
