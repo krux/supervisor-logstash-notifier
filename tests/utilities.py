@@ -22,7 +22,6 @@ import os
 import subprocess
 import threading
 
-from cStringIO import StringIO
 from time import sleep
 from unittest import TestCase
 from testfixtures import TempDirectory
@@ -65,7 +64,8 @@ class BaseSupervisorTestCase(TestCase):
 
         working_directory = os.path.dirname(__file__)
 
-        with open(os.path.join(working_directory, 'supervisord.template')) as template:
+        template_path = os.path.join(working_directory, 'supervisord.template')
+        with open(template_path) as template:
             configuration = template.read()
             configuration += configuration_string
             self.scratch.write('supervisor.conf', configuration)
