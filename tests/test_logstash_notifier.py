@@ -178,11 +178,12 @@ class SupervisorKeyvalsLoggingTestCase(BaseSupervisorTestCase):
 
             config = '''
 [eventlistener:logstash-notifier]
-command = ./logstash_notifier/__init__.py --include bears="polar,brown,black" notbears="unicorn,griffin,sphinx,otter"
+command = ./logstash_notifier/__init__.py --include %(args)s
 events = PROCESS_STATE
 '''
-
-            self.run_supervisor(environment, config)
+            args = 'bears="polar,brown,black" ' \
+                   'notbears="unicorn,griffin,sphinx,otter"'
+            self.run_supervisor(environment, config % {'args': args})
             self.messages(clear_buffer=True, wait_for=2)
 
             try:
