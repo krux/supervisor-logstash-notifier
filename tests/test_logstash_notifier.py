@@ -159,6 +159,61 @@ events = PROCESS_STATE
             self.assertDictContainsSubset(env, message['user_data'])
 
 
+class SupervisorKeyvalsLoggingTestCase(BaseSupervisorTestCase):
+    """
+    Test case for logging user data keyvals
+    """
+
+    def _test_environment_logging(self):
+        """
+        test logging of user data keyvals
+        """
+        logstash = self.run_logstash()
+        try:
+            environment = {
+                'LOGSTASH_SERVER': logstash.server_address[0],
+                'LOGSTASH_PORT': str(logstash.server_address[1]),
+                'LOGSTASH_PROTO': 'udp'
+            }
+
+            config = '''
+[eventlistener:logstash-notifier]
+command = ./logstash_notifier/__init__.py --include bears="polar,brown,black" notbears="unicorn,griffin,sphinx,otter"
+events = PROCESS_STATE
+'''
+
+            self.run_supervisor(environment, config)
+            self.messages(clear_buffer=True, wait_for=2)
+
+            try:
+                subprocess.call(['supervisorctl', 'stop', 'messages'])
+                received = self.messages(clear_buffer=True, wait_for=1)
+                # should only have the 'stopping' message
+                self.assertTrue(len(received) == 1)
+                message = received[0]
+
+                yield message
+            finally:
+                self.shutdown_supervisor()
+        finally:
+            self.shutdown_logstash()
+
+    def test_get_user_data(self):
+        """
+        Get the user data passed to logstash_notifier
+        """
+        for message in self._test_environment_logging():
+            self.assertTrue('user_data' in message)
+            user_data = {
+                'bears': "polar,brown,black",
+                'notbears': "unicorn,griffin,sphinx,otter"
+            }
+            self.assertDictEqual(
+                user_data,
+                message['user_data']
+            )
+
+
 class TestIncludeParser(TestCase):
     """
     Tests the parsing of the include options
