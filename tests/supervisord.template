@@ -19,9 +19,5 @@ nodaemon=true
 [rpcinterface:supervisor]
 supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
 
-[eventlistener:logstash-notifier]
-command = ./logstash_notifier/__init__.py
-events = PROCESS_STATE
-
 [program:messages]
 command=./tests/messages

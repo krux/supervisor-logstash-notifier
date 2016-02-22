@@ -22,8 +22,10 @@ import os
 import subprocess
 import threading
 
+from cStringIO import StringIO
 from time import sleep
 from unittest import TestCase
+from testfixtures import TempDirectory
 from six.moves import socketserver
 
 
@@ -48,7 +50,13 @@ class BaseSupervisorTestCase(TestCase):
         self.supervisor = None
         self.logstash = None
 
-    def run_supervisor(self, overrides, configuration_file):
+    def setUp(self):
+        self.scratch = TempDirectory()
+
+    def tearDown(self):
+        self.scratch.cleanup()
+
+    def run_supervisor(self, overrides, configuration_string):
         """
         Runs Supervisor
         """
@@ -57,9 +65,13 @@ class BaseSupervisorTestCase(TestCase):
 
         working_directory = os.path.dirname(__file__)
 
-        configuration = os.path.join(working_directory, configuration_file)
+        with open(os.path.join(working_directory, 'supervisord.template')) as template:
+            configuration = template.read()
+            configuration += configuration_string
+            self.scratch.write('supervisor.conf', configuration)
+
         self.supervisor = subprocess.Popen(
-            ['supervisord', '-c', configuration],
+            ['supervisord', '-c', self.scratch.getpath('supervisor.conf')],
             env=environment,
             cwd=os.path.dirname(working_directory),
         )
@@ -141,3 +153,4 @@ def record(eventname, from_state):
         'tags': [],
         'type': 'logstash'
     }
+

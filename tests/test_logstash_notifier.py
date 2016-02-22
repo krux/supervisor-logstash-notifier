@@ -43,7 +43,13 @@ class SupervisorLoggingTestCase(BaseSupervisorTestCase):
                 'LOGSTASH_PROTO': 'udp'
             }
 
-            self.run_supervisor(environment, 'supervisord.conf')
+            config = '''
+[eventlistener:logstash-notifier]
+command = ./logstash_notifier/__init__.py
+events = PROCESS_STATE
+'''
+
+            self.run_supervisor(environment, config)
             sleep(3)
             # clear the messages from when supervisor started the script
             self.clear_message_buffer()
@@ -98,7 +104,13 @@ class SupervisorEnvironmentLoggingTestCase(BaseSupervisorTestCase):
             if include is not None:
                 environment.update(include)
 
-            self.run_supervisor(environment, 'supervisord_env_logging.conf')
+            config = '''
+[eventlistener:logstash-notifier]
+command = ./logstash_notifier/__init__.py --include FRUITS VEGETABLES
+events = PROCESS_STATE
+'''
+
+            self.run_supervisor(environment, config)
             sleep(3)
             self.clear_message_buffer()
 
