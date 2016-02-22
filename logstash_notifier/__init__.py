@@ -88,6 +88,22 @@ def supervisor_events(stdin, stdout, *events):
         send_ok(stdout)
 
 
+def get_value_from_input(text):
+    """
+    Parses the input from the command line to work out if we've been given the
+    name of an environment variable to include or a keyval of arbitrary data to
+    include instead
+    """
+    values = {}
+    if '=' in text:
+        key, val = text.split('=', 1)
+        values[key] = val
+    else:
+        if text in os.environ:
+            values[text] = os.getenv(text)
+    return values
+
+
 def main(include):
     """
     Main application loop.
@@ -123,13 +139,12 @@ def main(include):
         extra['eventname'] = headers['eventname']
 
         if include:
-            env_vars = {}
-            for environment_variable in include:
-                if environment_variable in env:
-                    env_vars[environment_variable] = env[environment_variable]
+            user_data = {}
+            for variable in include:
+                user_data.update(get_value_from_input(variable))
 
-            if len(env_vars) > 0:
-                extra['env_vars'] = env_vars
+            if len(user_data) > 0:
+                extra['user_data'] = user_data
 
         logger.info(
             '%s %s', headers['eventname'], event_body['processname'],
@@ -138,7 +153,11 @@ def main(include):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--include', nargs='*', default=list(),
-                        help='include named environment variables in messages')
+    parser.add_argument(
+        '-i', '--include',
+        nargs='*',
+        default=list(),
+        help='include named environment variables and/or arbitrary metadata '
+             'keyvals in messages')
     args = parser.parse_args()
     main(include=args.include)

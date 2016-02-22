@@ -17,10 +17,14 @@
 Test logstash_notifier
 """
 
+import os
 import subprocess
 from time import sleep
 
+from unittest import TestCase
+
 from .utilities import BaseSupervisorTestCase, record
+from logstash_notifier import get_value_from_input
 
 
 class SupervisorLoggingTestCase(BaseSupervisorTestCase):
@@ -121,7 +125,7 @@ class SupervisorEnvironmentLoggingTestCase(BaseSupervisorTestCase):
         for message in self._test_environment_logging({}):
             # should have no additional added values since we asked for an
             # empty dict to be added
-            self.assertTrue('env_vars' not in message)
+            self.assertTrue('user_data' not in message)
 
     def test_only_one_value_set(self):
         """
@@ -132,8 +136,8 @@ class SupervisorEnvironmentLoggingTestCase(BaseSupervisorTestCase):
             'FRUITS': 'pineapple,raspberry,kiwi'
         }
         for message in self._test_environment_logging(env):
-            self.assertTrue('env_vars' in message)
-            self.assertDictContainsSubset(env, message['env_vars'])
+            self.assertTrue('user_data' in message)
+            self.assertDictContainsSubset(env, message['user_data'])
 
     def test_both_values_set(self):
         """
@@ -145,5 +149,61 @@ class SupervisorEnvironmentLoggingTestCase(BaseSupervisorTestCase):
             'VEGETABLES': 'sweet potato,leek,mushroom'
         }
         for message in self._test_environment_logging(env):
-            self.assertTrue('env_vars' in message)
-            self.assertDictContainsSubset(env, message['env_vars'])
+            self.assertTrue('user_data' in message)
+            self.assertDictContainsSubset(env, message['user_data'])
+
+
+class TestIncludeParser(TestCase):
+    """
+    Tests the parsing of the include options
+    """
+    def test_key_val_parsing(self):
+        """
+        Test parsing of keyval strings
+        """
+        self.assertEqual(
+            get_value_from_input('fruits="pear,kiwi,banana"'),
+            {'fruits': '"pear,kiwi,banana"'}
+        )
+        self.assertEqual(
+            get_value_from_input('berries='),
+            {'berries': ''}
+        )
+        self.assertEqual(
+            get_value_from_input('pythagoras=a2+b2=c2'),
+            {'pythagoras': 'a2+b2=c2'}
+        )
+
+    def test_environ_extraction(self):
+        """
+        Test inclusion of variables from the environ
+        """
+        os.environ['vegetables'] = '"carrot,peas,green beans"'
+        os.environ['smellythings'] = ''
+        self.assertEqual(
+            get_value_from_input('vegetables'),
+            {'vegetables': '"carrot,peas,green beans"'}
+        )
+        self.assertEqual(
+            get_value_from_input('smellythings'),
+            {'smellythings': ''}
+        )
+
+    def test_combination(self):
+        """
+        Test having both environment vars and arbitrary keyvals
+        """
+        os.environ['bears'] = 'polar,brown,black'
+        os.environ['notbears'] = 'unicorn,griffin,sphinx,otter'
+        command_line = ['bears', 'notbears', 'e=mc2', 'v=iR', 'qwertyuiop']
+        expected = {
+            'bears': 'polar,brown,black',
+            'notbears': 'unicorn,griffin,sphinx,otter',
+            'e': 'mc2',
+            'v': 'iR',
+        }
+        result = {}
+        for variable in command_line:
+            result.update(get_value_from_input(variable))
+
+        self.assertDictEqual(result, expected)
