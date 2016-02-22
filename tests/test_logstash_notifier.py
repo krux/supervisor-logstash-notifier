@@ -19,7 +19,6 @@ Test logstash_notifier
 
 import os
 import subprocess
-from time import sleep
 
 from unittest import TestCase
 
@@ -50,9 +49,7 @@ events = PROCESS_STATE
 '''
 
             self.run_supervisor(environment, config)
-            sleep(3)
-            # clear the messages from when supervisor started the script
-            self.clear_message_buffer()
+            startup_messages = self.messages(clear_buffer=True, wait_for=2)
 
             try:
                 subprocess.call(['supervisorctl', 'stop', 'messages'])
@@ -111,8 +108,7 @@ events = PROCESS_STATE
 '''
 
             self.run_supervisor(environment, config)
-            sleep(3)
-            self.clear_message_buffer()
+            startup_messages = self.messages(clear_buffer=True, wait_for=2)
 
             try:
                 subprocess.call(['supervisorctl', 'stop', 'messages'])

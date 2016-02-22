@@ -99,6 +99,7 @@ class BaseSupervisorTestCase(TestCase):
         Shuts the socketserver instance down
         """
         self.logstash.shutdown()
+        self.logstash.server_close()
 
     def messages(self, clear_buffer=False, wait_for=None):
         """
