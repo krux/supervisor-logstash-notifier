@@ -20,8 +20,9 @@ script:
 - nosetests --with-coverage --cover-erase --cover-tests
 sudo: false
 after_success:
-- coveralls --rcfile=.coveragerc
-- coveralls debug --rcfile=.coveragerc
+- coverage combine
+- coveralls
+- coveralls debug
 - ls -lah
 deploy:
   provider: pypi
