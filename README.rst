@@ -66,6 +66,17 @@ by specifying the name of the environment variables to include:
     command=export IPV4=`ec2metadata --local-ipv4`; logstash_notifier --include IPV4
     events=PROCESS_STATE
 
+Or alternatively, by specifying arbitrary keyvals of data to log:
+
+::
+
+    [eventlistener:logging]
+    command=logstash_notifier --include bears="polar,brown,black" notbears="unicorn,griffin,sphinx,otter"
+    events=PROCESS_STATE
+
+These two forms of arbitrary user data inclusion can be combined, and used together
+if necessary.
+
 Running with Logstash
 ---------------------
 
