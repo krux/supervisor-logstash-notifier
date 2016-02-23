@@ -1,4 +1,4 @@
-|Build Status|
+|Build Status| |Coveralls Status|
 
 This is a port of the
 `Supervisor-logging <https://github.com/infoxchange/supervisor-logging>`__
@@ -99,3 +99,5 @@ Logstash can be simply configured to receive events:
 
 .. |Build Status| image:: https://travis-ci.org/dohop/supervisor-logstash-notifier.svg?branch=master
    :target: https://travis-ci.org/dohop/supervisor-logstash-notifier
+.. |Coveralls Status| image:: https://coveralls.io/repos/github/dohop/supervisor-logstash-notifier/badge.svg?branch=master
+   :target: https://coveralls.io/github/dohop/supervisor-logstash-notifier?branch=master
