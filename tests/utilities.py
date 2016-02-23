@@ -22,7 +22,9 @@ import os
 import subprocess
 import threading
 
+from time import sleep
 from unittest import TestCase
+from testfixtures import TempDirectory
 from six.moves import socketserver
 
 
@@ -47,7 +49,13 @@ class BaseSupervisorTestCase(TestCase):
         self.supervisor = None
         self.logstash = None
 
-    def run_supervisor(self, overrides, configuration_file):
+    def setUp(self):
+        self.scratch = TempDirectory()
+
+    def tearDown(self):
+        self.scratch.cleanup()
+
+    def run_supervisor(self, overrides, configuration_string):
         """
         Runs Supervisor
         """
@@ -56,9 +64,14 @@ class BaseSupervisorTestCase(TestCase):
 
         working_directory = os.path.dirname(__file__)
 
-        configuration = os.path.join(working_directory, configuration_file)
+        template_path = os.path.join(working_directory, 'supervisord.template')
+        with open(template_path) as template:
+            configuration = template.read()
+            configuration += configuration_string
+            self.scratch.write('supervisor.conf', configuration, 'utf-8')
+
         self.supervisor = subprocess.Popen(
-            ['supervisord', '-c', configuration],
+            ['supervisord', '-c', self.scratch.getpath('supervisor.conf')],
             env=environment,
             cwd=os.path.dirname(working_directory),
         )
@@ -68,13 +81,16 @@ class BaseSupervisorTestCase(TestCase):
         Shuts Supervisor down
         """
         self.supervisor.terminate()
+        while self.supervisor.poll() is None:
+            # need to wait while the process kills off it's children and exits
+            # so that it doesn't block the port
+            sleep(1)
 
     def run_logstash(self):
         """
         Runs a socketserver instance emulating Logstash
         """
-        self.logstash = socketserver.UDPServer(
-            ('0.0.0.0', 0), LogstashHandler)
+        self.logstash = socketserver.UDPServer(('0.0.0.0', 0), LogstashHandler)
         threading.Thread(target=self.logstash.serve_forever).start()
         return self.logstash
 
@@ -83,15 +99,24 @@ class BaseSupervisorTestCase(TestCase):
         Shuts the socketserver instance down
         """
         self.logstash.shutdown()
+        self.logstash.server_close()
 
-    def messages(self, clear_buffer=False):
+    def messages(self, clear_buffer=False, wait_for=None):
         """
         Returns the contents of the logstash message buffer
         """
-        messages = self.logstash.RequestHandlerClass.messages
+        messages = []
+        if wait_for is not None:
+            while len(messages) < wait_for:
+                sleep(0.1)
+                messages = self.logstash.RequestHandlerClass.messages[:]
+        else:
+            messages = self.logstash.RequestHandlerClass.messages[:]
+
         parsed_messages = list(map(strip_volatile, messages))
         if clear_buffer:
             self.clear_message_buffer()
+
         return parsed_messages
 
     def clear_message_buffer(self):

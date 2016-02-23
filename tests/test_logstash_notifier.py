@@ -17,10 +17,13 @@
 Test logstash_notifier
 """
 
+import os
 import subprocess
-from time import sleep
+
+from unittest import TestCase
 
 from .utilities import BaseSupervisorTestCase, record
+from logstash_notifier import get_value_from_input
 
 
 class SupervisorLoggingTestCase(BaseSupervisorTestCase):
@@ -39,39 +42,230 @@ class SupervisorLoggingTestCase(BaseSupervisorTestCase):
                 'LOGSTASH_PROTO': 'udp'
             }
 
-            self.run_supervisor(environment, 'supervisord.conf')
-            sleep(3)
+            config = '''
+[eventlistener:logstash-notifier]
+command = ./logstash_notifier/__init__.py
+events = PROCESS_STATE
+'''
+
+            self.run_supervisor(environment, config)
+            self.messages(clear_buffer=True, wait_for=2)
 
             try:
                 subprocess.call(['supervisorctl', 'stop', 'messages'])
-                # we've stopped a process so should get the first message
-                # where it started, then a stopped message
-                # thus: STOPPED->STARTING->STOPPING
                 expected = [
-                    record('PROCESS_STATE_STARTING', 'STOPPED'),
-                    record('PROCESS_STATE_RUNNING', 'STARTING'),
                     record('PROCESS_STATE_STOPPED', 'STOPPING'),
                 ]
-                self.assertEqual(self.messages(clear_buffer=True), expected)
+                received = self.messages(clear_buffer=True, wait_for=1)
+                self.assertEqual(received, expected)
 
                 subprocess.call(['supervisorctl', 'start', 'messages'])
-                sleep(3)
                 expected = [
                     record('PROCESS_STATE_STARTING', 'STOPPED'),
                     record('PROCESS_STATE_RUNNING', 'STARTING'),
                 ]
 
-                self.assertEqual(self.messages(clear_buffer=True), expected)
+                received = self.messages(clear_buffer=True, wait_for=2)
+                self.assertEqual(received, expected)
 
                 subprocess.call(['supervisorctl', 'restart', 'messages'])
-                sleep(3)
                 expected = [
                     record('PROCESS_STATE_STOPPED', 'STOPPING'),
                     record('PROCESS_STATE_STARTING', 'STOPPED'),
                     record('PROCESS_STATE_RUNNING', 'STARTING'),
                 ]
-                self.assertEqual(self.messages(clear_buffer=True), expected)
+                received = self.messages(clear_buffer=True, wait_for=3)
+                self.assertEqual(received, expected)
             finally:
                 self.shutdown_supervisor()
         finally:
             self.shutdown_logstash()
+
+
+class SupervisorEnvironmentLoggingTestCase(BaseSupervisorTestCase):
+    """
+    Test case for logging extra environment variables
+    """
+
+    def _test_environment_logging(self, include=None):
+        """
+        test logging of env variables
+        """
+        logstash = self.run_logstash()
+        try:
+            environment = {
+                'LOGSTASH_SERVER': logstash.server_address[0],
+                'LOGSTASH_PORT': str(logstash.server_address[1]),
+                'LOGSTASH_PROTO': 'udp'
+            }
+            if include is not None:
+                environment.update(include)
+
+            config = '''
+[eventlistener:logstash-notifier]
+command = ./logstash_notifier/__init__.py --include FRUITS VEGETABLES
+events = PROCESS_STATE
+'''
+
+            self.run_supervisor(environment, config)
+            self.messages(clear_buffer=True, wait_for=2)
+
+            try:
+                subprocess.call(['supervisorctl', 'stop', 'messages'])
+                received = self.messages(clear_buffer=True, wait_for=1)
+                # should only have the 'stopping' message
+                self.assertTrue(len(received) == 1)
+                message = received[0]
+
+                yield message
+            finally:
+                self.shutdown_supervisor()
+        finally:
+            self.shutdown_logstash()
+
+    def test_not_present(self):
+        """
+        If the logger is configured to add two environment variables, FRUITS
+        and VEGETABLES, but neither is set, we shouldn't get anything extra
+        """
+        for message in self._test_environment_logging({}):
+            # should have no additional added values since we asked for an
+            # empty dict to be added
+            self.assertTrue('user_data' not in message)
+
+    def test_only_one_value_set(self):
+        """
+        If only one of them is set, we should only see that one in the logged
+        message
+        """
+        env = {
+            'FRUITS': 'pineapple,raspberry,kiwi'
+        }
+        for message in self._test_environment_logging(env):
+            self.assertTrue('user_data' in message)
+            self.assertDictEqual(env, message['user_data'])
+
+    def test_both_values_set(self):
+        """
+        If both of them is set, we should get both returned in the logged
+        message
+        """
+        env = {
+            'FRUITS': 'pineapple,raspberry,kiwi',
+            'VEGETABLES': 'sweet potato,leek,mushroom'
+        }
+        for message in self._test_environment_logging(env):
+            self.assertTrue('user_data' in message)
+            self.assertDictEqual(env, message['user_data'])
+
+
+class SupervisorKeyvalsLoggingTestCase(BaseSupervisorTestCase):
+    """
+    Test case for logging user data keyvals
+    """
+
+    def _test_environment_logging(self):
+        """
+        test logging of user data keyvals
+        """
+        logstash = self.run_logstash()
+        try:
+            environment = {
+                'LOGSTASH_SERVER': logstash.server_address[0],
+                'LOGSTASH_PORT': str(logstash.server_address[1]),
+                'LOGSTASH_PROTO': 'udp'
+            }
+
+            config = '''
+[eventlistener:logstash-notifier]
+command = ./logstash_notifier/__init__.py --include %(args)s
+events = PROCESS_STATE
+'''
+            args = 'bears="polar,brown,black" ' \
+                   'notbears="unicorn,griffin,sphinx,otter"'
+            self.run_supervisor(environment, config % {'args': args})
+            self.messages(clear_buffer=True, wait_for=2)
+
+            try:
+                subprocess.call(['supervisorctl', 'stop', 'messages'])
+                received = self.messages(clear_buffer=True, wait_for=1)
+                # should only have the 'stopping' message
+                self.assertTrue(len(received) == 1)
+                message = received[0]
+
+                yield message
+            finally:
+                self.shutdown_supervisor()
+        finally:
+            self.shutdown_logstash()
+
+    def test_get_user_data(self):
+        """
+        Get the user data passed to logstash_notifier
+        """
+        for message in self._test_environment_logging():
+            self.assertTrue('user_data' in message)
+            user_data = {
+                'bears': "polar,brown,black",
+                'notbears': "unicorn,griffin,sphinx,otter"
+            }
+            self.assertDictEqual(
+                user_data,
+                message['user_data']
+            )
+
+
+class TestIncludeParser(TestCase):
+    """
+    Tests the parsing of the include options
+    """
+    def test_key_val_parsing(self):
+        """
+        Test parsing of keyval strings
+        """
+        self.assertEqual(
+            get_value_from_input('fruits="pear,kiwi,banana"'),
+            {'fruits': '"pear,kiwi,banana"'}
+        )
+        self.assertEqual(
+            get_value_from_input('berries='),
+            {'berries': ''}
+        )
+        self.assertEqual(
+            get_value_from_input('pythagoras=a2+b2=c2'),
+            {'pythagoras': 'a2+b2=c2'}
+        )
+
+    def test_environ_extraction(self):
+        """
+        Test inclusion of variables from the environ
+        """
+        os.environ['vegetables'] = '"carrot,peas,green beans"'
+        os.environ['smellythings'] = ''
+        self.assertEqual(
+            get_value_from_input('vegetables'),
+            {'vegetables': '"carrot,peas,green beans"'}
+        )
+        self.assertEqual(
+            get_value_from_input('smellythings'),
+            {'smellythings': ''}
+        )
+
+    def test_combination(self):
+        """
+        Test having both environment vars and arbitrary keyvals
+        """
+        os.environ['bears'] = 'polar,brown,black'
+        os.environ['notbears'] = 'unicorn,griffin,sphinx,otter'
+        command_line = ['bears', 'notbears', 'e=mc2', 'v=iR', 'qwertyuiop']
+        expected = {
+            'bears': 'polar,brown,black',
+            'notbears': 'unicorn,griffin,sphinx,otter',
+            'e': 'mc2',
+            'v': 'iR',
+        }
+        result = {}
+        for variable in command_line:
+            result.update(get_value_from_input(variable))
+
+        self.assertDictEqual(result, expected)

@@ -18,6 +18,7 @@
 A module for dispatching Supervisor PROCESS_STATE events to a Syslog instance
 """
 
+import argparse
 import logging
 import os
 import sys
@@ -87,7 +88,23 @@ def supervisor_events(stdin, stdout, *events):
         send_ok(stdout)
 
 
-def main():
+def get_value_from_input(text):
+    """
+    Parses the input from the command line to work out if we've been given the
+    name of an environment variable to include or a keyval of arbitrary data to
+    include instead
+    """
+    values = {}
+    if '=' in text:
+        key, val = text.split('=', 1)
+        values[key] = val
+    else:
+        if text in os.environ:
+            values[text] = os.getenv(text)
+    return values
+
+
+def main(include):
     """
     Main application loop.
     """
@@ -120,10 +137,27 @@ def main():
             sys.stdin, sys.stdout, *events):
         extra = event_body.copy()
         extra['eventname'] = headers['eventname']
+
+        if include:
+            user_data = {}
+            for variable in include:
+                user_data.update(get_value_from_input(variable))
+
+            if len(user_data) > 0:
+                extra['user_data'] = user_data
+
         logger.info(
             '%s %s', headers['eventname'], event_body['processname'],
             extra=extra,
         )
 
 if __name__ == '__main__':
-    main()
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        '-i', '--include',
+        nargs='*',
+        default=list(),
+        help='include named environment variables and/or arbitrary metadata '
+             'keyvals in messages')
+    args = parser.parse_args()
+    main(include=args.include)
