@@ -21,7 +21,9 @@ A module for dispatching Supervisor PROCESS_STATE events to a Syslog instance
 import argparse
 import logging
 import os
+import signal
 import sys
+import warnings
 
 import logstash
 
@@ -151,13 +153,40 @@ def main(include):
             extra=extra,
         )
 
-if __name__ == '__main__':
+
+def run_with_coverage():  # pragma: no cover
+    """
+    Invoked when `-c|--coverage` is used on the command line
+    """
+    try:
+        import coverage
+    except ImportError:
+        warnings.warn(
+            'Coverage data will not be generated because coverage is not '
+            'installed. Please run `pip install coverage` and try again.'
+        )
+        return
+
+    coverage.process_startup()
+    # need to register a shutdown handler for SIGTERM since it won't run the
+    # atexit functions required by coverage
+    signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit(0))
+
+
+if __name__ == '__main__':  # pragma: no cover
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '-i', '--include',
-        nargs='*',
-        default=list(),
+        nargs='*', default=list(),
         help='include named environment variables and/or arbitrary metadata '
              'keyvals in messages')
+    parser.add_argument(
+        '-c', '--coverage',
+        action='store_true', default=False,
+        help='enables coverage when running tests'
+    )
     args = parser.parse_args()
+    if args.coverage:
+        run_with_coverage()
+
     main(include=args.include)

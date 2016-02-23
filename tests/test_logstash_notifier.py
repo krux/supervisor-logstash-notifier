@@ -39,12 +39,13 @@ class SupervisorLoggingTestCase(BaseSupervisorTestCase):
             environment = {
                 'LOGSTASH_SERVER': logstash.server_address[0],
                 'LOGSTASH_PORT': str(logstash.server_address[1]),
-                'LOGSTASH_PROTO': 'udp'
+                'LOGSTASH_PROTO': 'udp',
+                'COVERAGE_PROCESS_START': '.coveragerc'
             }
 
             config = '''
 [eventlistener:logstash-notifier]
-command = ./logstash_notifier/__init__.py
+command = ./logstash_notifier/__init__.py --coverage
 events = PROCESS_STATE
 '''
 
@@ -96,18 +97,19 @@ class SupervisorEnvironmentLoggingTestCase(BaseSupervisorTestCase):
             environment = {
                 'LOGSTASH_SERVER': logstash.server_address[0],
                 'LOGSTASH_PORT': str(logstash.server_address[1]),
-                'LOGSTASH_PROTO': 'udp'
+                'LOGSTASH_PROTO': 'udp',
+                'COVERAGE_PROCESS_START': '.coveragerc'
             }
             if include is not None:
                 environment.update(include)
 
             config = '''
 [eventlistener:logstash-notifier]
-command = ./logstash_notifier/__init__.py --include FRUITS VEGETABLES
+command = ./logstash_notifier/__init__.py --coverage --include %(args)s
 events = PROCESS_STATE
 '''
-
-            self.run_supervisor(environment, config)
+            args = 'FRUITS VEGETABLES'
+            self.run_supervisor(environment, config % {'args': args})
             self.messages(clear_buffer=True, wait_for=2)
 
             try:
@@ -173,12 +175,13 @@ class SupervisorKeyvalsLoggingTestCase(BaseSupervisorTestCase):
             environment = {
                 'LOGSTASH_SERVER': logstash.server_address[0],
                 'LOGSTASH_PORT': str(logstash.server_address[1]),
-                'LOGSTASH_PROTO': 'udp'
+                'LOGSTASH_PROTO': 'udp',
+                'COVERAGE_PROCESS_START': '.coveragerc'
             }
 
             config = '''
 [eventlistener:logstash-notifier]
-command = ./logstash_notifier/__init__.py --include %(args)s
+command = ./logstash_notifier/__init__.py --coverage --include %(args)s
 events = PROCESS_STATE
 '''
             args = 'bears="polar,brown,black" ' \

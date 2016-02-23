@@ -10,11 +10,14 @@ env:
 install:
 - pip install -r requirements.txt
 - pip install -r test_requirements.txt
+- pip install coveralls
 - ./install_supervisor
 script:
 - .githooks/pre-commit -f
 - python -m unittest discover
 sudo: false
+after_success:
+  coveralls
 deploy:
   provider: pypi
   user: aodj
