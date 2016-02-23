@@ -1,0 +1,11 @@
+#!/bin/sh -e
+# Install the correct version of Coverage into environment
+# https://bitbucket.org/ned/coveragepy/issues/407/coverage-failing-on-python-325-using
+
+if [ "$TRAVIS_PYTHON_VERSION" == "3.2" ]
+then
+    pip install coverage==3.7.1
+elif [ "$TRAVIS_PYTHON_VERSION" != "3.2" ]
+then
+	pip install coverage
+fi
