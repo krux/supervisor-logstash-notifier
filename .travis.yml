@@ -22,8 +22,6 @@ sudo: false
 after_success:
 - coverage combine
 - coveralls
-- coveralls debug
-- ls -lah
 deploy:
   provider: pypi
   user: aodj
