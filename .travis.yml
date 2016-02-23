@@ -17,10 +17,11 @@ install:
 - pip install coveralls
 script:
 - .githooks/pre-commit -f
-- nosetests --with-coverage --cover-erase --cover-tests --cover-package=logstash_notifer --cover-package=tests
+- nosetests --with-coverage --cover-erase --cover-tests
 sudo: false
 after_success:
   coveralls
+  coveralls debug
 deploy:
   provider: pypi
   user: aodj

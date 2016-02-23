@@ -1,3 +1,5 @@
 [run]
 parallel = True
-source = logstash_notifier,tests
+
+[report]
+include = logstash_notifier/*, tests/*
