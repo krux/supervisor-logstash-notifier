@@ -170,9 +170,9 @@ class SupervisorKeyvalsLoggingTestCase(BaseSupervisorTestCase):
             }
 
             config = get_config(
-	            arguments='--include '
-	                      'bears="polar,brown,black" '
-	                      'notbears="unicorn,griffin,sphinx,otter"'
+                arguments='--include '
+                          'bears="polar,brown,black" '
+                          'notbears="unicorn,griffin,sphinx,otter"'
             )
             self.run_supervisor(environment, config)
             self.messages(clear_buffer=True, wait_for=2)
