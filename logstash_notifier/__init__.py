@@ -106,7 +106,7 @@ def get_value_from_input(text):
     return values
 
 
-def main(include):
+def main(include=None):
     """
     Main application loop.
     """
@@ -140,7 +140,7 @@ def main(include):
         extra = event_body.copy()
         extra['eventname'] = headers['eventname']
 
-        if include:
+        if include is not None:
             user_data = {}
             for variable in include:
                 user_data.update(get_value_from_input(variable))
