@@ -162,3 +162,15 @@ def record(eventname, from_state):
         'tags': [],
         'type': 'logstash'
     }
+
+
+def get_config(arguments=None):
+    if arguments is None:
+        arguments = ''
+    
+    configuration_string = '''
+[eventlistener:logstash-notifier]
+command = ./logstash_notifier/__init__.py --coverage %(arguments)s
+events = PROCESS_STATE
+'''
+    return configuration_string % {'arguments': arguments}
