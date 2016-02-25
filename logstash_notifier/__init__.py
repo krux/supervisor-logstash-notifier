@@ -173,7 +173,7 @@ def run_with_coverage():  # pragma: no cover
     signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit(0))
 
 
-def main():
+def main():  # pragma: no cover
     """
     Main entry point
     """
