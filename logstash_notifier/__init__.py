@@ -106,7 +106,7 @@ def get_value_from_input(text):
     return values
 
 
-def main(include=None):
+def application(include=None):
     """
     Main application loop.
     """
@@ -173,7 +173,7 @@ def run_with_coverage():  # pragma: no cover
     signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit(0))
 
 
-if __name__ == '__main__':  # pragma: no cover
+def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '-i', '--include',
@@ -189,4 +189,8 @@ if __name__ == '__main__':  # pragma: no cover
     if args.coverage:
         run_with_coverage()
 
-    main(include=args.include)
+    application(include=args.include)
+
+
+if __name__ == '__main__':  # pragma: no cover
+    main()
