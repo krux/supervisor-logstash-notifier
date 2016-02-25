@@ -165,9 +165,12 @@ def record(eventname, from_state):
 
 
 def get_config(arguments=None):
+    """
+    Retruns a pre-formatted configuration block for supervisor
+    """
     if arguments is None:
         arguments = ''
-    
+
     configuration_string = '''
 [eventlistener:logstash-notifier]
 command = ./logstash_notifier/__init__.py --coverage %(arguments)s

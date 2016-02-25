@@ -174,6 +174,9 @@ def run_with_coverage():  # pragma: no cover
 
 
 def main():
+    """
+    Main entry point
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '-i', '--include',
