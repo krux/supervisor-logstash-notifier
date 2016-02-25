@@ -22,7 +22,7 @@ import subprocess
 
 from unittest import TestCase
 
-from .utilities import BaseSupervisorTestCase, record
+from .utilities import BaseSupervisorTestCase, record, get_config
 from logstash_notifier import get_value_from_input
 
 
@@ -43,12 +43,7 @@ class SupervisorLoggingTestCase(BaseSupervisorTestCase):
                 'COVERAGE_PROCESS_START': '.coveragerc'
             }
 
-            config = '''
-[eventlistener:logstash-notifier]
-command = ./logstash_notifier/__init__.py --coverage
-events = PROCESS_STATE
-'''
-
+            config = get_config()
             self.run_supervisor(environment, config)
             self.messages(clear_buffer=True, wait_for=2)
 
@@ -103,13 +98,8 @@ class SupervisorEnvironmentLoggingTestCase(BaseSupervisorTestCase):
             if include is not None:
                 environment.update(include)
 
-            config = '''
-[eventlistener:logstash-notifier]
-command = ./logstash_notifier/__init__.py --coverage --include %(args)s
-events = PROCESS_STATE
-'''
-            args = 'FRUITS VEGETABLES'
-            self.run_supervisor(environment, config % {'args': args})
+            config = get_config(arguments='--include FRUITS VEGETABLES')
+            self.run_supervisor(environment, config)
             self.messages(clear_buffer=True, wait_for=2)
 
             try:
@@ -179,14 +169,12 @@ class SupervisorKeyvalsLoggingTestCase(BaseSupervisorTestCase):
                 'COVERAGE_PROCESS_START': '.coveragerc'
             }
 
-            config = '''
-[eventlistener:logstash-notifier]
-command = ./logstash_notifier/__init__.py --coverage --include %(args)s
-events = PROCESS_STATE
-'''
-            args = 'bears="polar,brown,black" ' \
-                   'notbears="unicorn,griffin,sphinx,otter"'
-            self.run_supervisor(environment, config % {'args': args})
+            config = get_config(
+                arguments='--include '
+                          'bears="polar,brown,black" '
+                          'notbears="unicorn,griffin,sphinx,otter"'
+            )
+            self.run_supervisor(environment, config)
             self.messages(clear_buffer=True, wait_for=2)
 
             try:

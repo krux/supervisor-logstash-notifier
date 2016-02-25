@@ -106,7 +106,7 @@ def get_value_from_input(text):
     return values
 
 
-def main(include):
+def application(include=None):
     """
     Main application loop.
     """
@@ -140,7 +140,7 @@ def main(include):
         extra = event_body.copy()
         extra['eventname'] = headers['eventname']
 
-        if include:
+        if include is not None:
             user_data = {}
             for variable in include:
                 user_data.update(get_value_from_input(variable))
@@ -173,7 +173,10 @@ def run_with_coverage():  # pragma: no cover
     signal.signal(signal.SIGTERM, lambda signum, frame: sys.exit(0))
 
 
-if __name__ == '__main__':  # pragma: no cover
+def main():
+    """
+    Main entry point
+    """
     parser = argparse.ArgumentParser()
     parser.add_argument(
         '-i', '--include',
@@ -189,4 +192,8 @@ if __name__ == '__main__':  # pragma: no cover
     if args.coverage:
         run_with_coverage()
 
-    main(include=args.include)
+    application(include=args.include)
+
+
+if __name__ == '__main__':  # pragma: no cover
+    main()
