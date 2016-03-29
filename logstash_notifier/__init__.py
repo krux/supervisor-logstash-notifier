@@ -157,7 +157,10 @@ def application(include=None, capture_output=False):
         # do have a message body, so use that if it's present, or fall
         # back to eventname/processname if it's not.
         message = event_data if len(event_data) \
-                             else '%s %s' % (headers['eventname'], event_body['processname'])
+                             else '%s %s' % (
+                                 headers['eventname'],
+                                 event_body['processname']
+                             )
 
         logger.info(message, extra=extra)
 
@@ -199,7 +202,8 @@ def main():  # pragma: no cover
     parser.add_argument(
         '-o', '--capture-output',
         action='store_true', default=False,
-        help='capture stdout/stderr output from supervisor processes in addition to events'
+        help='capture stdout/stderr output from supervisor '
+             'processes in addition to events'
     )
     args = parser.parse_args()
     if args.coverage:
