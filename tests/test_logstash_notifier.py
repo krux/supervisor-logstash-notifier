@@ -205,6 +205,48 @@ class SupervisorKeyvalsLoggingTestCase(BaseSupervisorTestCase):
                 message['user_data']
             )
 
+class SupervisorOutPutLoggingTestCase(BaseSupervisorTestCase):
+    """
+    Test capturing stdout/stderr logs.
+    """
+
+    def test_output_logging(self):
+        """
+        Test stdout is captured in logs when capture-output argument is set.
+        """
+        logstash = self.run_logstash()
+        try:
+            environment = {
+                'LOGSTASH_SERVER': logstash.server_address[0],
+                'LOGSTASH_PORT': str(logstash.server_address[1]),
+                'LOGSTASH_PROTO': 'udp',
+                'COVERAGE_PROCESS_START': '.coveragerc'
+            }
+            config = get_config(arguments='--capture-output', events='PROCESS_LOG')
+            self.run_supervisor(environment, config)
+
+            try:
+                expected = [{
+                    '@version': '1',
+                    'channel': 'stdout',
+                    'eventname': 'PROCESS_LOG_STDOUT',
+                    'groupname': 'messages',
+                    'level': 'INFO',
+                    'logger_name': 'supervisor',
+                    'message': 'Test 0\n',
+                    'path': './logstash_notifier/__init__.py',
+                    'processname': 'messages',
+                    'tags': [],
+                    'type': 'logstash',
+                }]
+
+                received = self.messages(clear_buffer=True, wait_for=1)
+                self.assertEqual(received, expected)
+
+            finally:
+                self.shutdown_supervisor()
+        finally:
+            self.shutdown_logstash()
 
 class TestIncludeParser(TestCase):
     """

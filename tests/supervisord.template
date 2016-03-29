@@ -21,3 +21,5 @@ supervisor.rpcinterface_factory = supervisor.rpcinterface:make_main_rpcinterface
 
 [program:messages]
 command=./tests/messages
+stdout_events_enabled=true
+stderr_events_enabled=true
