@@ -110,12 +110,11 @@ def application(include=None, capture_output=False):
     """
     Main application loop.
     """
-    env = os.environ
 
     try:
-        host = env['LOGSTASH_SERVER']
-        port = int(env['LOGSTASH_PORT'])
-        socket_type = env['LOGSTASH_PROTO']
+        host = os.environ['LOGSTASH_SERVER']
+        port = int(os.environ['LOGSTASH_PORT'])
+        socket_type = os.environ['LOGSTASH_PROTO']
     except KeyError:
         sys.exit("LOGSTASH_SERVER, LOGSTASH_PORT and LOGSTASH_PROTO are "
                  "required.")
@@ -124,8 +123,7 @@ def application(include=None, capture_output=False):
     events = ['PROCESS_STATE_' + state for state in events]
 
     if capture_output:
-        outputs = ['STDOUT', 'STDERR']
-        events += ['PROCESS_LOG_' + output for output in outputs]
+        events += ['PROCESS_LOG_STDOUT', 'PROCESS_LOG_STDERR']
 
     logstash_handler = None
     if socket_type == 'udp':
@@ -156,13 +154,13 @@ def application(include=None, capture_output=False):
         # the data is set to '' in event_data(). Stdout/Stderr events
         # do have a message body, so use that if it's present, or fall
         # back to eventname/processname if it's not.
-        message = event_data if len(event_data) \
+        event_data = event_data if len(event_data) \
                              else '%s %s' % (
                                  headers['eventname'],
                                  event_body['processname']
                              )
 
-        logger.info(message, extra=extra)
+        logger.info(event_data, extra=extra)
 
 
 def run_with_coverage():  # pragma: no cover
