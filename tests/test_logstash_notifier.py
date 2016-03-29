@@ -212,7 +212,7 @@ class SupervisorOutPutLoggingTestCase(BaseSupervisorTestCase):
 
     def test_output_logging(self):
         """
-        Test output logging.
+        Test stdout is captured in logs when capture-output argument is set.
         """
         logstash = self.run_logstash()
         try:

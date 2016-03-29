@@ -152,6 +152,10 @@ def application(include=None, capture_output=False):
             if len(user_data) > 0:
                 extra['user_data'] = user_data
 
+        # Events, like starting/stopping don't have a message body and
+        # the data is set to '' in event_data(). Stdout/Stderr events
+        # do have a message body, so use that if it's present, or fall
+        # back to eventname/processname if it's not.
         message = event_data if len(event_data) \
                              else '%s %s' % (headers['eventname'], event_body['processname'])
 
