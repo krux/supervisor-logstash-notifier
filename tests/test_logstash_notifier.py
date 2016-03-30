@@ -223,9 +223,9 @@ class SupervisorOutPutLoggingTestCase(BaseSupervisorTestCase):
                 'COVERAGE_PROCESS_START': '.coveragerc'
             }
             config = get_config(
-                        arguments='--capture-output',
-                        events='PROCESS_LOG'
-                     )
+                arguments='--capture-output',
+                events='PROCESS_LOG'
+            )
             self.run_supervisor(environment, config)
 
             try:
