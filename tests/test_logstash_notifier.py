@@ -205,6 +205,7 @@ class SupervisorKeyvalsLoggingTestCase(BaseSupervisorTestCase):
                 message['user_data']
             )
 
+
 class SupervisorOutPutLoggingTestCase(BaseSupervisorTestCase):
     """
     Test capturing stdout/stderr logs.
@@ -250,6 +251,7 @@ class SupervisorOutPutLoggingTestCase(BaseSupervisorTestCase):
                 self.shutdown_supervisor()
         finally:
             self.shutdown_logstash()
+
 
 class TestIncludeParser(TestCase):
     """
