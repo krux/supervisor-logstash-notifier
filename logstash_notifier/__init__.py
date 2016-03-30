@@ -106,22 +106,20 @@ def get_value_from_input(text):
     return values
 
 
-def application(include=None):
+def get_logger():
     """
-    Main application loop.
+    Sets up the logger used to send the supervisor events and messages to
+    the logstash server, via the socket type provided, port and host defined
+    in the environment
     """
-    env = os.environ
 
     try:
-        host = env['LOGSTASH_SERVER']
-        port = int(env['LOGSTASH_PORT'])
-        socket_type = env['LOGSTASH_PROTO']
+        host = os.environ['LOGSTASH_SERVER']
+        port = int(os.environ['LOGSTASH_PORT'])
+        socket_type = os.environ['LOGSTASH_PROTO']
     except KeyError:
         sys.exit("LOGSTASH_SERVER, LOGSTASH_PORT and LOGSTASH_PROTO are "
                  "required.")
-
-    events = ['BACKOFF', 'FATAL', 'EXITED', 'STOPPED', 'STARTING', 'RUNNING']
-    events = ['PROCESS_STATE_' + state for state in events]
 
     logstash_handler = None
     if socket_type == 'udp':
@@ -135,7 +133,22 @@ def application(include=None):
     logger.addHandler(logstash_handler(host, port, version=1))
     logger.setLevel(logging.INFO)
 
-    for headers, event_body, _ in supervisor_events(
+    return logger
+
+
+def application(include=None, capture_output=False):
+    """
+    Main application loop.
+    """
+    logger = get_logger()
+
+    events = ['BACKOFF', 'FATAL', 'EXITED', 'STOPPED', 'STARTING', 'RUNNING']
+    events = ['PROCESS_STATE_' + state for state in events]
+
+    if capture_output:
+        events += ['PROCESS_LOG_STDOUT', 'PROCESS_LOG_STDERR']
+
+    for headers, event_body, event_data in supervisor_events(
             sys.stdin, sys.stdout, *events):
         extra = event_body.copy()
         extra['eventname'] = headers['eventname']
@@ -148,10 +161,17 @@ def application(include=None):
             if len(user_data) > 0:
                 extra['user_data'] = user_data
 
-        logger.info(
-            '%s %s', headers['eventname'], event_body['processname'],
-            extra=extra,
-        )
+        # Events, like starting/stopping don't have a message body and
+        # the data is set to '' in event_data(). Stdout/Stderr events
+        # do have a message body, so use that if it's present, or fall
+        # back to eventname/processname if it's not.
+        if not len(event_data) > 0:
+            event_data = '%s %s' % (
+                headers['eventname'],
+                event_body['processname']
+            )
+
+        logger.info(event_data, extra=extra)
 
 
 def run_with_coverage():  # pragma: no cover
@@ -188,11 +208,17 @@ def main():  # pragma: no cover
         action='store_true', default=False,
         help='enables coverage when running tests'
     )
+    parser.add_argument(
+        '-o', '--capture-output',
+        action='store_true', default=False,
+        help='capture stdout/stderr output from supervisor '
+             'processes in addition to events'
+    )
     args = parser.parse_args()
     if args.coverage:
         run_with_coverage()
 
-    application(include=args.include)
+    application(include=args.include, capture_output=args.capture_output)
 
 
 if __name__ == '__main__':  # pragma: no cover

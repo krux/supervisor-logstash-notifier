@@ -2,15 +2,15 @@
 
 This is a port of the
 `Supervisor-logging <https://github.com/infoxchange/supervisor-logging>`__
-project. Rather than capture loglines, as Supervisor-logging does it's
-intended to capture the
+project. Along with capturing loglines, as Supervisor-logging does, it's
+also intended to capture the
 `PROCESS_STATE <http://supervisord.org/events.html#event-listeners-and-event-notifications>`__
 events that Supervisor emits.
 
 supervisor-logstash-notifier
 ============================
 
-A `supervisor <http://supervisord.org/>`__ plugin to stream events to a
+A `supervisor <http://supervisord.org/>`__ plugin to stream events & logs to a
 Logstash instance.
 
 Installation
@@ -40,9 +40,20 @@ Add the plugin as an event listener:
 
 ::
 
+    # Capture state changes
     [eventlistener:logging]
     command = logstash_notifier
     events = PROCESS_STATE
+
+    # Capture stdout/stderr
+    [eventlistener:logging]
+    command = logstash_notifier
+    events = PROCESS_LOG
+
+    # Capture state changes and stdout/stderr
+    [eventlistener:logging]
+    command = logstash_notifier
+    events = PROCESS_STATE,PROCESS_LOG
 
 If you don't wish to define the environment variables for the entire
 shell, you can pass them in via Supervisor's configuration:
@@ -96,6 +107,46 @@ Logstash can be simply configured to receive events:
             codec => rubydebug
         }
     }
+
+The JSON produced by the events and log output will look like this:
+
+::    
+
+    # State changes
+    {
+      "@timestamp": "2016-03-28T23:58:03.469Z",
+      "@version": "1",
+      "eventname": "PROCESS_STATE_STOPPED",
+      "from_state": "STOPPING",
+      "groupname": "myprocess",
+      "host": "ip-10-93-130-24",
+      "level": "INFO",
+      "logger_name": "supervisor",
+      "message": "PROCESS_STATE_STOPPED collectd",
+      "path": "/path/to/supervisor-logstash-notifier/logstash_notifier/__init__.py",
+      "pid": "1234",
+      "processname": "myprocess",
+      "tags": [],
+      "type": "logstash"
+    }
+
+    # Log output
+    {
+      "@timestamp": "2016-03-28T23:58:03.741Z",
+      "@version": "1",
+      "channel": "stdout"
+      "eventname": "PROCESS_LOG_STDOUT",
+      "groupname": "myprocess",
+      "host": "localhost",
+      "level": "INFO",
+      "logger_name": "supervisor",
+      "message": "myprocess output #1\n",
+      "path": "/path/to/supervisor-logstash-notifier/logstash_notifier/__init__.py",
+      "pid": "1234",
+      "processname": "myprocess",
+      "tags": [],
+      "type": "logstash",
+    }   
 
 .. |Build Status| image:: https://travis-ci.org/dohop/supervisor-logstash-notifier.svg?branch=master
    :target: https://travis-ci.org/dohop/supervisor-logstash-notifier
