@@ -222,7 +222,10 @@ class SupervisorOutPutLoggingTestCase(BaseSupervisorTestCase):
                 'LOGSTASH_PROTO': 'udp',
                 'COVERAGE_PROCESS_START': '.coveragerc'
             }
-            config = get_config(arguments='--capture-output', events='PROCESS_LOG')
+            config = get_config(
+                        arguments='--capture-output',
+                        events='PROCESS_LOG'
+                     )
             self.run_supervisor(environment, config)
 
             try:
