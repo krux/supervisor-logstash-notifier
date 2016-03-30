@@ -3,4 +3,3 @@ pylint
 pylint-mccabe
 testfixtures
 nose
-supervisor
