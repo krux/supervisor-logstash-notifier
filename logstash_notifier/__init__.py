@@ -106,9 +106,11 @@ def get_value_from_input(text):
     return values
 
 
-def application(include=None, capture_output=False):
+def get_logger():
     """
-    Main application loop.
+    Sets up the logger used to send the supervisor events and messages to
+    the logstash server, via the socket type provided, port and host defined
+    in the environment
     """
 
     try:
@@ -118,12 +120,6 @@ def application(include=None, capture_output=False):
     except KeyError:
         sys.exit("LOGSTASH_SERVER, LOGSTASH_PORT and LOGSTASH_PROTO are "
                  "required.")
-
-    events = ['BACKOFF', 'FATAL', 'EXITED', 'STOPPED', 'STARTING', 'RUNNING']
-    events = ['PROCESS_STATE_' + state for state in events]
-
-    if capture_output:
-        events += ['PROCESS_LOG_STDOUT', 'PROCESS_LOG_STDERR']
 
     logstash_handler = None
     if socket_type == 'udp':
@@ -136,6 +132,21 @@ def application(include=None, capture_output=False):
     logger = logging.getLogger('supervisor')
     logger.addHandler(logstash_handler(host, port, version=1))
     logger.setLevel(logging.INFO)
+
+    return logger
+
+
+def application(include=None, capture_output=False):
+    """
+    Main application loop.
+    """
+    logger = get_logger()
+
+    events = ['BACKOFF', 'FATAL', 'EXITED', 'STOPPED', 'STARTING', 'RUNNING']
+    events = ['PROCESS_STATE_' + state for state in events]
+
+    if capture_output:
+        events += ['PROCESS_LOG_STDOUT', 'PROCESS_LOG_STDERR']
 
     for headers, event_body, event_data in supervisor_events(
             sys.stdin, sys.stdout, *events):
@@ -154,11 +165,11 @@ def application(include=None, capture_output=False):
         # the data is set to '' in event_data(). Stdout/Stderr events
         # do have a message body, so use that if it's present, or fall
         # back to eventname/processname if it's not.
-        event_data = event_data if len(event_data) \
-                             else '%s %s' % (
-                                 headers['eventname'],
-                                 event_body['processname']
-                             )
+        if not len(event_data) > 0:
+            event_data = '%s %s' % (
+                headers['eventname'],
+                event_body['processname']
+            )
 
         logger.info(event_data, extra=extra)
 
