@@ -3,3 +3,6 @@ pylint
 pylint-mccabe
 testfixtures
 nose
+# needed for pythong 2.6
+unittest2
+coverage
