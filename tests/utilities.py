@@ -48,6 +48,8 @@ class BaseSupervisorTestCase(TestCase):
         super(BaseSupervisorTestCase, self).__init__(*args, **kwargs)
         self.supervisor = None
         self.logstash = None
+        # store, as it's also used by supervisorctl
+        self._config_file_path = None
 
     def setUp(self):
         self.scratch = TempDirectory()
@@ -70,14 +72,14 @@ class BaseSupervisorTestCase(TestCase):
             configuration += configuration_string
             self.scratch.write('supervisor.conf', configuration, 'utf-8')
 
-        config_file_path = self.scratch.getpath('supervisor.conf')
+        # store, as it's also used by supervisorctl
+        self._config_file_path = self.scratch.getpath('supervisor.conf')
+
         self.supervisor = subprocess.Popen(
-            ['supervisord', '-c', config_file_path],
+            ['supervisord', '-c', self._config_file_path],
             env=environment,
             cwd=os.path.dirname(working_directory),
         )
-
-        return config_file_path
 
     def shutdown_supervisor(self):
         """
@@ -88,6 +90,18 @@ class BaseSupervisorTestCase(TestCase):
             # need to wait while the process kills off it's children and exits
             # so that it doesn't block the port
             sleep(1)
+
+    def run_supervisorctl(self, args):
+        """
+        Runs supervisorctl using the test suites config file
+        """
+        command = [
+            'supervisorctl',
+            '-c', self._config_file_path,
+        ]
+        command += args
+
+        return subprocess.call(command)
 
     def run_logstash(self):
         """
