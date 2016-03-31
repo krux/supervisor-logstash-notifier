@@ -16,7 +16,7 @@ Logstash instance.
 Installation
 ------------
 
-Python 2.7 or Python 3.2+ is required.
+Python 2.6, 2.7 or Python 3.2+ is required.
 
 ::
 
@@ -68,7 +68,7 @@ shell, you can pass them in via Supervisor's configuration:
 Advanced Usage
 --------------
 
-It is also possible to include environment variables in the event messages, 
+It is also possible to include environment variables in the event messages,
 by specifying the name of the environment variables to include:
 
 ::
@@ -110,7 +110,7 @@ Logstash can be simply configured to receive events:
 
 The JSON produced by the events and log output will look like this:
 
-::    
+::
 
     # State changes
     {
@@ -146,7 +146,7 @@ The JSON produced by the events and log output will look like this:
       "processname": "myprocess",
       "tags": [],
       "type": "logstash",
-    }   
+    }
 
 .. |Build Status| image:: https://travis-ci.org/dohop/supervisor-logstash-notifier.svg?branch=master
    :target: https://travis-ci.org/dohop/supervisor-logstash-notifier
