@@ -70,11 +70,14 @@ class BaseSupervisorTestCase(TestCase):
             configuration += configuration_string
             self.scratch.write('supervisor.conf', configuration, 'utf-8')
 
+        config_file_path = self.scratch.getpath('supervisor.conf')
         self.supervisor = subprocess.Popen(
-            ['supervisord', '-c', self.scratch.getpath('supervisor.conf')],
+            ['supervisord', '-c', config_file_path],
             env=environment,
             cwd=os.path.dirname(working_directory),
         )
+
+        return config_file_path
 
     def shutdown_supervisor(self):
         """
