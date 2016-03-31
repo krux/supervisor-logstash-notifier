@@ -18,11 +18,10 @@ Test logstash_notifier
 """
 
 import os
-import subprocess
 
 try:
     from unittest2 import TestCase
-except:
+except ImportError:
     from unittest import TestCase
 
 from .utilities import BaseSupervisorTestCase, record, get_config

@@ -22,15 +22,14 @@ import os
 import subprocess
 import threading
 
-try:
-    from unittest2 import TestCase
-except:
-    from unittest import TestCase
-
 from time import sleep
 from testfixtures import TempDirectory
 from six.moves import socketserver
 
+try:
+    from unittest2 import TestCase
+except ImportError:
+    from unittest import TestCase
 
 class LogstashHandler(socketserver.BaseRequestHandler):
     """
