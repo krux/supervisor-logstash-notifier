@@ -31,6 +31,7 @@ try:
 except ImportError:
     from unittest import TestCase
 
+
 class LogstashHandler(socketserver.BaseRequestHandler):
     """
     Save received messages.
