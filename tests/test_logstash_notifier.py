@@ -20,7 +20,10 @@ Test logstash_notifier
 import os
 import subprocess
 
-from unittest import TestCase
+try:
+    from unittest2 import TestCase
+except:
+    from unittest import TestCase
 
 from .utilities import BaseSupervisorTestCase, record, get_config
 from logstash_notifier import get_value_from_input
