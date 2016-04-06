@@ -18,9 +18,11 @@ Test logstash_notifier
 """
 
 import os
-import subprocess
 
-from unittest import TestCase
+try:
+    from unittest2 import TestCase
+except ImportError:
+    from unittest import TestCase
 
 from .utilities import BaseSupervisorTestCase, record, get_config
 from logstash_notifier import get_value_from_input
@@ -48,14 +50,14 @@ class SupervisorLoggingTestCase(BaseSupervisorTestCase):
             self.messages(clear_buffer=True, wait_for=2)
 
             try:
-                subprocess.call(['supervisorctl', 'stop', 'messages'])
+                self.run_supervisorctl(['stop', 'messages'])
                 expected = [
                     record('PROCESS_STATE_STOPPED', 'STOPPING'),
                 ]
                 received = self.messages(clear_buffer=True, wait_for=1)
                 self.assertEqual(received, expected)
 
-                subprocess.call(['supervisorctl', 'start', 'messages'])
+                self.run_supervisorctl(['start', 'messages'])
                 expected = [
                     record('PROCESS_STATE_STARTING', 'STOPPED'),
                     record('PROCESS_STATE_RUNNING', 'STARTING'),
@@ -64,7 +66,7 @@ class SupervisorLoggingTestCase(BaseSupervisorTestCase):
                 received = self.messages(clear_buffer=True, wait_for=2)
                 self.assertEqual(received, expected)
 
-                subprocess.call(['supervisorctl', 'restart', 'messages'])
+                self.run_supervisorctl(['restart', 'messages'])
                 expected = [
                     record('PROCESS_STATE_STOPPED', 'STOPPING'),
                     record('PROCESS_STATE_STARTING', 'STOPPED'),
@@ -103,7 +105,7 @@ class SupervisorEnvironmentLoggingTestCase(BaseSupervisorTestCase):
             self.messages(clear_buffer=True, wait_for=2)
 
             try:
-                subprocess.call(['supervisorctl', 'stop', 'messages'])
+                self.run_supervisorctl(['stop', 'messages'])
                 received = self.messages(clear_buffer=True, wait_for=1)
                 # should only have the 'stopping' message
                 self.assertTrue(len(received) == 1)
@@ -178,7 +180,7 @@ class SupervisorKeyvalsLoggingTestCase(BaseSupervisorTestCase):
             self.messages(clear_buffer=True, wait_for=2)
 
             try:
-                subprocess.call(['supervisorctl', 'stop', 'messages'])
+                self.run_supervisorctl(['stop', 'messages'])
                 received = self.messages(clear_buffer=True, wait_for=1)
                 # should only have the 'stopping' message
                 self.assertTrue(len(received) == 1)
