@@ -111,6 +111,9 @@ def __newline_formatter(func):
     Wrap a formatter function so a newline is appended if needed to the output
     """
     def __wrapped_func(*args, **kwargs):
+        """
+        Wrapper function that appends a newline to result of original fucntion
+        """
         result = func(*args, **kwargs)
 
         # Avoid double line endings
@@ -121,6 +124,7 @@ def __newline_formatter(func):
 
     # Return the wrapper
     return __wrapped_func
+
 
 def get_logger(append_newline=False):
     """
