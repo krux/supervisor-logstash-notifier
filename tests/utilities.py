@@ -39,7 +39,10 @@ class LogstashHandler(socketserver.BaseRequestHandler):
     messages = []
 
     def handle(self):
-        self.messages.append(self.request[0].strip().decode())
+        # Avoid strip()'ing the message, as there's an option to append
+        # newlines to the output of the app, which strip() would remove
+        # and thus a test would fail
+        self.messages.append(self.request[0].decode())
 
 
 class BaseSupervisorTestCase(TestCase):
@@ -139,6 +142,12 @@ class BaseSupervisorTestCase(TestCase):
             self.clear_message_buffer()
 
         return parsed_messages
+
+    def get_message_buffer(self):
+        """
+        Returns the raw logstash message buffer
+        """
+        return self.logstash.RequestHandlerClass.messages[:]
 
     def clear_message_buffer(self):
         """
