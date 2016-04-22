@@ -125,6 +125,10 @@ def __newline_formatter(func):
         if isinstance(result, str):
             line_ending = "\n"
         elif isinstance(result, bytes):
+            # We are redefining the variable type on purpose since python
+            # broke backwards compatibility between 2 & 3. Pylint will
+            # throw an error on this, so we have to disable the check.
+            # pylint: disable=redefined-variable-type
             line_ending = b"\n"
 
         # Avoid double line endings
