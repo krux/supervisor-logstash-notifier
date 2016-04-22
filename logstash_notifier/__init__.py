@@ -116,9 +116,21 @@ def __newline_formatter(func):
         """
         result = func(*args, **kwargs)
 
+        # The result may be a string, or bytes. In python 2 they are the
+        # same, but in python 3, they are not. First, check for strings
+        # as that works the same in python 2 and 3, THEN check for bytes,
+        # as that implementation is python 3 specific. If it's neither
+        # (future proofing), we use a regular new line
+        if isinstance(result, str):
+            line_ending = "\n"
+        elif isinstance(result, bytes):
+            line_ending = b"\n"
+        else:
+            line_ending = "\n"
+
         # Avoid double line endings
-        if not result.endswith("\n"):
-            result = result + "\n"
+        if not result.endswith(line_ending):
+            result = result + line_ending
 
         return result
 
