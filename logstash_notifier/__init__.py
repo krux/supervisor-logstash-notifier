@@ -121,12 +121,11 @@ def __newline_formatter(func):
         # as that works the same in python 2 and 3, THEN check for bytes,
         # as that implementation is python 3 specific. If it's neither
         # (future proofing), we use a regular new line
+        line_ending = "\n"
         if isinstance(result, str):
             line_ending = "\n"
         elif isinstance(result, bytes):
             line_ending = b"\n"
-        else:
-            line_ending = "\n"
 
         # Avoid double line endings
         if not result.endswith(line_ending):
