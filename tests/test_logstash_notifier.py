@@ -255,6 +255,51 @@ class SupervisorOutPutLoggingTestCase(BaseSupervisorTestCase):
             self.shutdown_logstash()
 
 
+class SupervisorAppendNewLineTestCase(BaseSupervisorTestCase):
+    """
+    Test appending newlines to log messages.
+    """
+
+    def test_newline_logging(self):
+        """
+        Test a newline is appended when relevant config option is set.
+        """
+        logstash = self.run_logstash()
+        try:
+            environment = {
+                'LOGSTASH_SERVER': logstash.server_address[0],
+                'LOGSTASH_PORT': str(logstash.server_address[1]),
+                'LOGSTASH_PROTO': 'udp',
+                'COVERAGE_PROCESS_START': '.coveragerc'
+            }
+            config = get_config(
+                arguments='--append-newline',
+            )
+
+            self.run_supervisor(environment, config)
+            self.messages(clear_buffer=True, wait_for=2)
+
+            try:
+                self.run_supervisorctl(['stop', 'messages'])
+
+                # Base test case - note added newline
+                expected = [
+                    record('PROCESS_STATE_STOPPED', 'STOPPING'),
+                ]
+                # Keep the buffer, needed in next test.
+                received = self.messages(clear_buffer=False, wait_for=1)
+                self.assertEqual(received, expected)
+
+                # Raw message test case
+                for message in self.get_message_buffer():
+                    self.assertTrue(message.endswith("\n"))
+
+            finally:
+                self.shutdown_supervisor()
+        finally:
+            self.shutdown_logstash()
+
+
 class TestIncludeParser(TestCase):
     """
     Tests the parsing of the include options

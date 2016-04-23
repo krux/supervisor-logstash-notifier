@@ -106,7 +106,42 @@ def get_value_from_input(text):
     return values
 
 
-def get_logger():
+def __newline_formatter(func):
+    """
+    Wrap a formatter function so a newline is appended if needed to the output
+    """
+    def __wrapped_func(*args, **kwargs):
+        """
+        Wrapper function that appends a newline to result of original fucntion
+        """
+        result = func(*args, **kwargs)
+
+        # The result may be a string, or bytes. In python 2 they are the
+        # same, but in python 3, they are not. First, check for strings
+        # as that works the same in python 2 and 3, THEN check for bytes,
+        # as that implementation is python 3 specific. If it's neither
+        # (future proofing), we use a regular new line
+        line_ending = "\n"
+        if isinstance(result, str):
+            line_ending = "\n"
+        elif isinstance(result, bytes):
+            # We are redefining the variable type on purpose since python
+            # broke backwards compatibility between 2 & 3. Pylint will
+            # throw an error on this, so we have to disable the check.
+            # pylint: disable=redefined-variable-type
+            line_ending = b"\n"
+
+        # Avoid double line endings
+        if not result.endswith(line_ending):
+            result = result + line_ending
+
+        return result
+
+    # Return the wrapper
+    return __wrapped_func
+
+
+def get_logger(append_newline=False):
     """
     Sets up the logger used to send the supervisor events and messages to
     the logstash server, via the socket type provided, port and host defined
@@ -130,17 +165,27 @@ def get_logger():
         raise RuntimeError('Unknown protocol defined: %r' % socket_type)
 
     logger = logging.getLogger('supervisor')
-    logger.addHandler(logstash_handler(host, port, version=1))
+    handler = logstash_handler(host, port, version=1)
+    logger.addHandler(handler)
     logger.setLevel(logging.INFO)
+
+    # To be able to append newlines to the logger output, we'll need to
+    # wrap the formatter. As we can't predict the formatter class, it's
+    # easier to wrap the format() function, which is part of the logger
+    # spec than it is to override/wrap the formatter class, whose name
+    # is determined by the logstash class.
+    if append_newline:
+        handler.formatter.format = \
+            __newline_formatter(handler.formatter.format)
 
     return logger
 
 
-def application(include=None, capture_output=False):
+def application(include=None, capture_output=False, append_newline=False):
     """
     Main application loop.
     """
-    logger = get_logger()
+    logger = get_logger(append_newline=append_newline)
 
     events = ['BACKOFF', 'FATAL', 'EXITED', 'STOPPED', 'STARTING', 'RUNNING']
     events = ['PROCESS_STATE_' + state for state in events]
@@ -214,11 +259,20 @@ def main():  # pragma: no cover
         help='capture stdout/stderr output from supervisor '
              'processes in addition to events'
     )
+    parser.add_argument(
+        '-n', '--append-newline',
+        action='store_true', default=False,
+        help='ensure all messages sent end with a newline character'
+    )
     args = parser.parse_args()
     if args.coverage:
         run_with_coverage()
 
-    application(include=args.include, capture_output=args.capture_output)
+    application(
+        include=args.include,
+        capture_output=args.capture_output,
+        append_newline=args.append_newline,
+    )
 
 
 if __name__ == '__main__':  # pragma: no cover
